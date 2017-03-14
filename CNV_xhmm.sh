@@ -19,9 +19,9 @@ for arg in "$@"; do
 		echo -e "
 ## CNV analysis ## - HELP Documentation - v2.0 - Buridan (XHMM ONLY) ##
 
-Useful script for running either conifer, xhmm or both CNV algorithms on a set of bam files
+Script for running xhmm CNV algorithms on a set of bam files
 
-GATK, Conifer and Reference genome files are internally specifed for Padawan (Server)
+GATK and Reference genome files are internally specifed for Whisperwind (Server)
 Please set these to alternate values by editing the script
 
 Required arguments:
@@ -71,11 +71,8 @@ Examples:
 
 Running xhmm analysis on a folder containing bams:
 ./CNV_analysis.sh -i /data/BAMS/ -o /data/CNV_REULTS/ -p /xhmm/files/params.txt -v /data/ref/nextera_exome_targets.bed -b /data/ref/hg38_genes.bed
-
-Running both software programmes on a folder containing bams:
-./CNV_analysis.sh -i /data/BAMS/ -o /data/CNV_REULTS/ -p /xhmm/files/params.txt -v /data/ref/nextera_exome_targets.bed -b /data/ref/hg38_genes.bed
 		"			               
-		echo -e "\n\n"
+		echo -e "\n"
 		exit
 	fi
 done
