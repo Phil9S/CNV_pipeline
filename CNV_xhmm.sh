@@ -5,7 +5,7 @@ gatk="/data/Resources/Software/GenomeAnalysisTK.jar"
 ref="/data/Resources/hg38_2/hg38_2MergeAll.fa"
 ##Command-line variables
 inputfolder="NULL"
-refbed="NULL"
+#refbed="NULL"
 int="NULL"
 params="NULL"
 timestamp=$(date +"%m_%Y")
@@ -111,10 +111,10 @@ while [[ $# > 1 ]]
 		int=$2
 		shift
 		;;
-		-b|--bed)
-		refbed=$2
-		shift
-		;;    
+#		-b|--bed)
+#  	refbed=$2
+#		shift
+#		;;    
 	esac
 	shift
 done
@@ -141,12 +141,7 @@ if [[ ! -w ${outputfolder} ]]; then
 	echo -e "\n ## CNV Pipeline ##\nERROR: Output folder provided is not writable - Please make sure you have the correct permissions and are not writing in a protected folder\nExiting Now"
 	exit
 fi
-##CNVTYPE
 
-if [[ "$cnvtype" == "NULL" ]]; then
-        echo -e "\n## CNV Pipeline ##\nERROR: No analysis type given, provided using -c / --cnv - Please use -h / --help for documentation\nExiting Now"
-        exit
-fi
 
 if [[ "$cnvtype" != "xhmm" ]] && [[ "$cnvtype" != "conifer" ]] && [[ "$cnvtype" != "both" ]]; then
         echo -e "\n## CNV Pipeline ##\nERROR: Unknown analysis type given, please provide an accepted option for -c / --cnv - Please use -h / --help for documentation\nExiting Now"
@@ -155,15 +150,15 @@ fi
 
 
 ##REF BED
-if [[ "$refbed" == "NULL" ]]; then
-	echo -e "\n## CNV Pipeline ##\nERROR: No reference bed file (gene intverals) specified, provided by -b / --bed - Please use -h / --help for documentation\nExiting Now"
-	exit
-fi
+#if [[ "$refbed" == "NULL" ]]; then
+#	echo -e "\n## CNV Pipeline ##\nERROR: No reference bed file (gene intverals) specified, provided by -b / --bed - Please use -h / --help for documentation\nExiting Now"
+#	exit
+#fi
 
-if [[ ! -f ${refbed} ]]; then
-	echo -e "\n## CNV Pipeline ##\nERROR: Specifed reference bed file does not exist, provided by -b / --bed - Please use -h / --help for documentation\nExiting Now"
-	exit
-fi
+#if [[ ! -f ${refbed} ]]; then
+#	echo -e "\n## CNV Pipeline ##\nERROR: Specifed reference bed file does not exist, provided by -b / --bed - Please use -h / --help for documentation\nExiting Now"
+#	exit
+#fi
 
 ##INTERVAL
 if [[ "$int" == "NULL" ]]; then
