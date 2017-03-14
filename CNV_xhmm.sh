@@ -143,12 +143,6 @@ if [[ ! -w ${outputfolder} ]]; then
 fi
 
 
-if [[ "$cnvtype" != "xhmm" ]] && [[ "$cnvtype" != "conifer" ]] && [[ "$cnvtype" != "both" ]]; then
-        echo -e "\n## CNV Pipeline ##\nERROR: Unknown analysis type given, please provide an accepted option for -c / --cnv - Please use -h / --help for documentation\nExiting Now"
-        exit
-fi
-
-
 ##REF BED
 #if [[ "$refbed" == "NULL" ]]; then
 #	echo -e "\n## CNV Pipeline ##\nERROR: No reference bed file (gene intverals) specified, provided by -b / --bed - Please use -h / --help for documentation\nExiting Now"
