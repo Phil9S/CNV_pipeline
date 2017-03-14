@@ -1,7 +1,6 @@
 #!/bin/bash
 
 ##Programme and reference files
-conifer="/home/pss41/conifer_v0.2.2/conifer.py"
 gatk="/data/Resources/Software/GenomeAnalysisTK.jar"
 ref="/data/Resources/hg38_2/hg38_2MergeAll.fa"
 ##Command-line variables
@@ -11,7 +10,6 @@ int="NULL"
 params="NULL"
 timestamp=$(date +"%m_%Y")
 outputfolder="NULL"
-cnvtype="NULL"
 temp="FALSE"
 
 ##Admin BLOCK - Help, temp files, default message
@@ -19,7 +17,7 @@ temp="FALSE"
 for arg in "$@"; do
 	if [[ "$arg" == "-h" ]] || [[ "$arg" == "--help" ]]; then
 		echo -e "
-## CNV analysis ## - HELP Documentation - v1.0 - Buridan ##
+## CNV analysis ## - HELP Documentation - v2.0 - Buridan (XHMM ONLY) ##
 
 Useful script for running either conifer, xhmm or both CNV algorithms on a set of bam files
 
@@ -34,10 +32,6 @@ ARUGMENT			TYPE				DESCRIPTION
 								be used in the CNV analysis. Must end in .bam
 								& have index files present in the same folder	
 		
--c --cnv			string				Option defining the CNV programme to run on the
-								target files. Options are 'conifer', 'xhmm' or
-								'both'.
-
 -o --output			folder				A directory path for a preferrably empty folder
 								in which all resulting files will be deposited
 
@@ -61,12 +55,12 @@ ARUGMENT			TYPE				DESCRIPTION
 								QC and error checks.
 Dependencies:
 
-Will only run on Server: Sunstrider (without modification)
+Will only run on Server: Whisperwind (without modification)
 
 Packages:
-- xhmm		- GATK
-- conifer	- bedtools
-- python 2.7	
+- xhmm		
+- GATK	
+- bedtools
 
 Core utilities:
 - vim		- cat
@@ -76,13 +70,10 @@ Core utilities:
 Examples:
 
 Running xhmm analysis on a folder containing bams:
-./CNV_analysis.sh -c xhmm -i /data/BAMS/ -o /data/CNV_REULTS/ -p /xhmm/files/params.txt -v /data/ref/nextera_exome_targets.bed -b /data/ref/hg38_genes.bed
-
-Running conifer analysis on a folder containing bams (note params file not required):
-./CNV_analysis.sh -c conifer -i /data/BAMS/ -o /data/CNV_REULTS/  -v /data/ref/nextera_exome_targets.bed -b /data/ref/hg38_genes.bed
+./CNV_analysis.sh -i /data/BAMS/ -o /data/CNV_REULTS/ -p /xhmm/files/params.txt -v /data/ref/nextera_exome_targets.bed -b /data/ref/hg38_genes.bed
 
 Running both software programmes on a folder containing bams:
-./CNV_analysis.sh -c both -i /data/BAMS/ -o /data/CNV_REULTS/ -p /xhmm/files/params.txt -v /data/ref/nextera_exome_targets.bed -b /data/ref/hg38_genes.bed
+./CNV_analysis.sh -i /data/BAMS/ -o /data/CNV_REULTS/ -p /xhmm/files/params.txt -v /data/ref/nextera_exome_targets.bed -b /data/ref/hg38_genes.bed
 		"			               
 		echo -e "\n\n"
 		exit
@@ -109,10 +100,6 @@ while [[ $# > 1 ]]
 	case $key in
 		-i|--input)
 		inputfolder=$2
-		shift
-		;;
-		-c|--cnv)
-		cnvtype=$2
 		shift
 		;;
 		-o|--output)
@@ -180,17 +167,7 @@ if [[ ! -f ${refbed} ]]; then
 	echo -e "\n## CNV Pipeline ##\nERROR: Specifed reference bed file does not exist, provided by -b / --bed - Please use -h / --help for documentation\nExiting Now"
 	exit
 fi
-##PARAMS
 
-if [[ "$cnvtype" != "conifer" ]] && [[ "$params" == "NULL" ]]; then
-	echo -e "\n## CNV Pipeline ##\nERROR: The specified analysis type requires the parameters file, provided by -p / --params - Please use -h / --help for documentation\nExiting Now"
-	exit
-fi 
-
-if [[ "$cnvtype" != "conifer" ]] && [[ ! -f ${params} ]]; then
-	echo -e "\n## CNV Pipeline ##\nERROR: Specified parameters file (for xhmm) does not exist, provided by -p / --params - Please use -h / --help for documentation\nExiting Now"
-	exit
-fi
 ##INTERVAL
 if [[ "$int" == "NULL" ]]; then
 	echo -e "\n## CNV Pipeline ##\nERROR: No interval file (exome/targeted panel etc) specified, provided by -v / --interval - Please use -h / --help for documentation\nExiting Now"
@@ -216,257 +193,112 @@ cd ${outputfolder}cnv_analysis
 
 
 
+###XHMM output process block##
+echo -e "## XHMM ANALYSIS ## - Started at: $(date)\n"
 
-
-
-
-
-##XHMM output process block##
-if [[ "$cnvtype" == "xhmm" ]] || [[ "$cnvtype" == "both" ]]; then
-	echo -e "## XHMM ANALYSIS ## - Started at: $(date)\n"
-	##Output directory
-	if [ -d "xhmm_analysis_${timestamp}" ]; then
-		echo -e "## XHMM ANALYSIS ## - Analysis folder exists - folder not generated\n"
-	else
-		mkdir xhmm_analysis_${timestamp}
-	fi
-	##Temp folder generation
-	if [ -d "xhmm_analysis_${timestamp}/temp" ]; then
-		echo -e "## XHMM ANALYSIS ## - Temporary folder exists - folder not generated\n"
-	else 
-		mkdir xhmm_analysis_${timestamp}/temp
-	fi
-	cd xhmm_analysis_${timestamp}/temp
-	cp ${int} xhmm.intervals
-	vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals 
-	interval="xhmm.intervals"		
-	find ${inputfolder} -name *.bam -type f > bam_list_xhmm
-##XHMM Analysis
-
-	echo -e "## XHMM ANALYSIS ## - Bam files split into 4 sets...(Stage 1 of 7)\n"
-	split -a 1 --numeric-suffixes=1 --additional-suffix=.list -n l/4 bam_list_xhmm bam_chunk
-
-	echo -e "## XHMM ANALYSIS ## - Performing depth of coverage...(Stage 2 of 7)\n"
-	java -Xmx30g -jar ${gatk} \
-	-T DepthOfCoverage -I bam_chunk1.list -L ${interval} \
-	-R ${ref} \
-	-dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable \
-	--minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 \
-	--includeRefNSites \
-	--countType COUNT_FRAGMENTS \
-	-o bam_chunkOUT1 &
-
-	java -Xmx30g -jar ${gatk} \
-	-T DepthOfCoverage -I bam_chunk2.list -L ${interval} \
-	-R ${ref} \
-	-dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable \
-	--minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 \
-	--includeRefNSites \
-	--countType COUNT_FRAGMENTS \
-	-o bam_chunkOUT2 &
-
-	java -Xmx30g -jar ${gatk} \
-	-T DepthOfCoverage -I bam_chunk3.list -L ${interval} \
-	-R ${ref} \
-	-dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable \
-	--minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 \
-	--includeRefNSites \
-	--countType COUNT_FRAGMENTS \
-	-o bam_chunkOUT3 &
-
-	java -Xmx30g -jar ${gatk} \
-	-T DepthOfCoverage -I bam_chunk4.list -L ${interval} \
-	-R ${ref} \
-	-dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable \
-	--minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 \
-	--includeRefNSites \
-	--countType COUNT_FRAGMENTS \
-	-o bam_chunkOUT4 &
-	##Allow for all child processes in parallel to complete
-	wait
-	sleep 5
-
-	echo -e "## XHMM ANALYSIS ## - Merging depth of coverage files & Calculating GC content...(Stage 3 of 7)\n"
-	
-	##Combines GATK Depth-of-Coverage outputs for multiple samples (at same loci):
-	xhmm --mergeGATKdepths -o xhmmCNV.mergeDepths.txt \
-	--GATKdepths bam_chunkOUT1.sample_interval_summary \
-	--GATKdepths bam_chunkOUT2.sample_interval_summary \
-	--GATKdepths bam_chunkOUT3.sample_interval_summary \
-	--GATKdepths bam_chunkOUT4.sample_interval_summary > /dev/null 2>&1
-
-	##calculates the GC Content of the exome intervals
-	java -Xmx3072m -jar ${gatk} \
-	-T GCContentByInterval -L ${interval} \
-	-R ${ref} \
-	-o DATA_GC_percent.txt > /dev/null 2>&1
-	echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean read depth...(Stage 4 of 7)\n"
-	
-	##Concatonates and asseses GC content (if less than 0.1 or more than 0.9 -> print to new file
-	cat DATA_GC_percent.txt | awk '{if ($2 < 0.1 || $2 > 0.9) print $1}' > extreme_gc_targets.txt
-	##Centers the data about the mean and filters high/low GC intervals out of analysis
-	xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target \
-	-o xhmmCNV.filtered_centered.RD.txt \
-	--outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt \
-	--outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt \
-	--excludeTargets extreme_gc_targets.txt \
-	--minTargetSize 10 --maxTargetSize 10000 \
-	--minMeanTargetRD 10 --maxMeanTargetRD 500 \
-	--minMeanSampleRD 25 --maxMeanSampleRD 200 \
-	--maxSdSampleRD 150 > /dev/null 2>&1
-
-	echo -e "## XHMM ANALYSIS ## - Analysing PCA plot & Normalising data...(Stage 5 of 7)\n"
-	##Performs PCA to generate component variation - decreases data variability due to 1st-nth priciple components
-	xhmm --PCA -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PCA > /dev/null 2>&1
-
-	##Normalises the mean centered data using the PCA data
-	xhmm --normalize -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PCA \
-	--normalizeOutput xhmmCNV.PCA_normalized.txt \
-	--PCnormalizeMethod PVE_mean --PVE_mean_factor 0.7 > /dev/null 2>&1
-	##Generates and asseses z-score distribution of mean centered-normalised read depth data and filters inappropriate intervals
-	xhmm --matrix -r xhmmCNV.PCA_normalized.txt --centerData --centerType sample --zScoreData \
-	-o xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt \
-	--outputExcludedTargets xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt.filtered_targets.txt \
-	--outputExcludedSamples xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt.filtered_samples.txt \
-	--maxSdTargetRD 30 > /dev/null 2>&1
-	##applies the normalisation and z-scoring to the standard non-normalised and centered data set
-	xhmm --matrix -r xhmmCNV.mergeDepths.txt \
-	--excludeTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt \
-	--excludeTargets xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt.filtered_targets.txt \
-	--excludeSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt \
-	--excludeSamples xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt.filtered_samples.txt \
-	-o xhmmCNV.same_filtered.RD.txt > /dev/null 2>&1
-	
-	##performs assessment of the z-score to identify high levels of statistcal deviation in interval regions
-	xhmm --discover -p ${params} \
-	-r xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt -R xhmmCNV.same_filtered.RD.txt \
-	-c xhmmCNV.xcnv -a xhmmCNV.aux_xcnv -s xhmmCNV > /dev/null 2>&1
-
-	echo -e "## XHMM ANALYSIS ## - Genotyping called CNVs...(Stage 6 of 7)\n"	
-
-	##genotypes indentified CNV during prior discovery steps
-	xhmm --genotype -p ${params} \
-	-r xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt -R xhmmCNV.same_filtered.RD.txt \
-	-g xhmmCNV.xcnv -F ${ref} \
-	-v xhmmCNV.vcf > /dev/null 2>&1
-	##Results annotation & formatting##
-	echo -e "## XHMM ANALYSIS ## - Annotating & formatting output...(Stage 7 of 7)\n"
-	##xcnv to bed format conversion
-	if (( $(cat xhmmCNV.xcnv | wc -l) < '2' )); then
-		echo -e "## XHMM ANALYSIS ## - ERROR: No CNVs called - Likely too few samples\n"
-		echo -e "## XHMM ANALYSIS ## - XHMM analysis exiting"
-		exit
-	fi 
-	sed '1d' xhmmCNV.xcnv > xhmmCNV.bed
-	vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\S\+\t\(\S\+\)\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+/\1\t\2\t\3/g|wq" xhmmCNV.bed
-	##subsitition of xhmm xcnv file for removing extra columns
-	vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\):\(\S\+\)-\(\S\+\)/chr\3\t\4\t\5\t\2_\1/g|wq" xhmmCNV.bed
-	##rearranging trimmed columns into bed4 format (chr, start, end, info)
-	sort -k 1,1 -k 2,2 xhmmCNV.bed > xhmmCNV.sort.bed
-	mv xhmmCNV.sort.bed xhmmCNV.bed
-	##Intersect of found cnvs with known ref gene intervals - one result per interval
-	intersectBed -a xhmmCNV.bed -b ${refbed} -wb > xhmmCNV.anno.tsv
-	##Output formating sed commands and header addition
-	vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\4\t\1\t\2\t\3\t\8\t\5\t\6\t\7/g|wq" xhmmCNV.anno.tsv
-	vim -c "%s/\(DEL\)_\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\2\t\1\t\3\t\4\t\5\t\6\t\7\t\8\t\9/g|wq" xhmmCNV.anno.tsv
-	vim -c "%s/\(DUP\)_\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\2\t\1\t\3\t\4\t\5\t\6\t\7\t\8\t\9/g|wq" xhmmCNV.anno.tsv
-	echo -e "sample\tcnv_type\tchr\tstart\tend\tgene\tgene_chr\tgene_start\tgene_end" > xhmmheader.tsv
-	cat xhmmCNV.anno.tsv >> xhmmheader.tsv
-	mv xhmmheader.tsv ../xhmmCNV.anno.tsv
-	mv xhmmCNV.vcf ../xhmmCNV.vcf
-	mv xhmmCNV.xcnv ../xhmmCNV.xcnv
-	mv bam_list_xhmm ../xhmm_samplelist.txt
-	if [[ "$temp" == "FALSE" ]]; then
-		cd ../
-		rm -r temp
-	fi
-	echo -e "## XHMM ANALYSIS ## - COMPLETE!"
+###Output directory
+if [ -d "xhmm_analysis_${timestamp}" ]; then
+	echo -e "## XHMM ANALYSIS ## - Analysis folder exists - folder not generated\n"
+else
+	mkdir xhmm_analysis_${timestamp}
 fi
 
-
-
-
-
-
-
-
-
-##Conifer analysis block##
-cd ${outputfolder}cnv_analysis #required working directory reset
-if [[ "$cnvtype" == "conifer" ]] || [[ "$cnvtype" == "both" ]]; then
-
-	echo -e "## CONIFER ANALYSIS ## - Started at: $(date)\n"
-        ##Output directory
-        if [ -d "conifer_analysis_${timestamp}" ]; then
-                echo -e "## CONIFER ANALYSIS ## - Analysis folder exists - folder not generated\n"
-        else
-                mkdir conifer_analysis_${timestamp}
-        fi
-        ##Temp folder generation
-        if [ -d "conifer_analysis_${timestamp}/temp" ]; then
-                echo -e "## CONIFER ANALYSIS ## - Temporary folder exists - folder not generated\n"
-        else
-                mkdir conifer_analysis_${timestamp}/temp
-        fi
-        cd conifer_analysis_${timestamp}/temp
-	
-#	find ${inputfolder} -name *.bam -type f > bam_list_conifer	
-#	vim -c "%s/.*\///g|wq" bam_list_conifer #removes the directory path
-	if [ -d "RPKM/" ]; then
-		echo -e "## CONIFER ANALYSIS ## - RPKM Folder exists - folder not generated\n"
-	else	
-		mkdir RPKM/
-	fi	
-##conifer analysis##
-	##interval file manipulation
-	echo -e "chr	start	stop	name" > conifer.intervals
-	cp ${int} intervals_temp
-	cat intervals_temp >> conifer.intervals
-	probes="conifer.intervals"
-	ltotal=`cat bam_list_conifer | wc -l`
-	COUNTER=1
-	for i in `cat bam_list_conifer`; do
-		echo -e "##CONIFER ANALYSIS ## - Calculating rpkm values for ${COUNTER} of ${ltotal}...(Stage 1 of 3)\n"
-		python ${conifer} rpkm --probes ${probes} --input ${inputfolder}${i} \
-		--output RPKM/${i}.rpkm.txt
-		COUNTER=$((COUNTER + 1))
-	done
-	echo -e "## CONIFER ANALYSIS ## - Calculating variance and calling CNVs across all samples...(Stage 2 of 3)\n"
-	python ${conifer} analyze --probes ${probes} --rpkm_dir RPKM/ --output conifer_analysis.hdf5 \
-	--svd 6 --write_svals singular_values.txt --plot_scree conifer_screeplot.png --write_sd conifer_sd_values.txt
-#####SVD VALUE should be 8######
-	python ${conifer} call --input conifer_analysis.hdf5 --output conifer_cnv_calls.txt
-
-##Results annotation & formatting##
-	##conifer output conversion to .bed format
-	echo -e "## CONIFER ANALYSIS ## - Annotating and formatting output... (Stage 3 of 3)\n"
-	sed -i '1d' conifer_cnv_calls.txt
-	cp conifer_cnv_calls.txt coniferCNV.bed
-	##rearranging trimmed columns into bed4 format (chr, start, end, info)
-	if (( $(cat coniferCNV.bed | wc -l) < '2' )); then
-		echo -e "## CONIFER ANALYSIS ## - ERROR: No CNVs called - Likely too few samples\n"
-                echo -e "## CONIFER ANALYSIS ## - CONIFER analysis exiting"
-                exit
-        fi
-	vim -c "%s/.bam.rpkm//g|wq" coniferCNV.bed
-	vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\2\t\3\t\4\t\1_\5/g|wq" coniferCNV.bed
-	sort -k 1,1 -k 2,2 coniferCNV.bed > coniferCNV.srt.bed
-	mv coniferCNV.srt.bed coniferCNV.bed
-	##Intersect of found cnvs with known ref gene intervals - one result per interval
-	intersectBed -a coniferCNV.bed -b ${refbed} -wb > coniferCNV.anno.tsv
-	##Output formating sed commands and header addition
-	vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\4\t\1\t\2\t\3\t\8\t\5\t\6\t\7/g|wq" coniferCNV.anno.tsv
-	vim -c "%s/\(\S\+\)_\(del\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6\t\7\t\8\t\9/g|wq" coniferCNV.anno.tsv
-	vim -c "%s/\\(\S\+\)_\(dup\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6\t\7\t\8\t\9/g|wq" coniferCNV.anno.tsv
-	echo -e "sample\tcnv_type\tchr\tstart\tend\tgene\tgene_chr\tgene_start\tgene_end" > coniferheader.tsv
-	cat coniferCNV.anno.tsv >> coniferheader.tsv
-	mv coniferheader.tsv coniferCNV.anno.tsv
-	mv coniferCNV.anno.tsv ../coniferCNV.anno.tsv
-	mv bam_list_conifer ../conifer_samples.list
-	mv conifer_cnv_calls.txt ../conifer_cnv_calls.txt	
-	mv RPKM ../RPKM
-	if [[ "$temp" == "FALSE" ]]; then
-               cd ../
-               rm -r temp
-        fi
+###Temp folder generation
+if [ -d "xhmm_analysis_${timestamp}/temp" ]; then
+	echo -e "## XHMM ANALYSIS ## - Temporary folder exists - folder not generated\n"
+else 
+	mkdir xhmm_analysis_${timestamp}/temp
 fi
+cd xhmm_analysis_${timestamp}/temp
+cp ${int} xhmm.intervals
+vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals 
+interval="xhmm.intervals"		
+find ${inputfolder} -name *.bam -type f > bam_list_xhmm
+
+###XHMM Analysis
+
+echo -e "## XHMM ANALYSIS ## - Bam files split into 4 sets...(Stage 1 of 7)\n"
+split -a 1 --numeric-suffixes=1 --additional-suffix=.list -n l/4 bam_list_xhmm bam_chunk
+
+echo -e "## XHMM ANALYSIS ## - Performing depth of coverage...(Stage 2 of 7)\n"
+
+java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk1.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable --minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 --includeRefNSites --countType COUNT_FRAGMENTS -o bam_chunkOUT1 &
+
+java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk2.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable --minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 --includeRefNSites --countType COUNT_FRAGMENTS -o bam_chunkOUT2 &
+
+java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk3.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable --minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 --includeRefNSites --countType COUNT_FRAGMENTS -o bam_chunkOUT3 &
+
+java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk4.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable --minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 --includeRefNSites --countType COUNT_FRAGMENTS -o bam_chunkOUT4 &
+
+###Allow for all child processes in parallel to complete
+wait
+sleep 5
+
+echo -e "## XHMM ANALYSIS ## - Merging depth of coverage files & Calculating GC content...(Stage 3 of 7)\n"
+	
+###Combines GATK Depth-of-Coverage outputs for multiple samples (at same loci):
+xhmm --mergeGATKdepths -o xhmmCNV.mergeDepths.txt --GATKdepths bam_chunkOUT1.sample_interval_summary --GATKdepths bam_chunkOUT2.sample_interval_summary --GATKdepths bam_chunkOUT3.sample_interval_summary --GATKdepths bam_chunkOUT4.sample_interval_summary > /dev/null 2>&1
+
+###calculates the GC Content of the exome intervals
+java -Xmx3072m -jar ${gatk} -T GCContentByInterval -L ${interval} -R ${ref} -o DATA_GC_percent.txt > /dev/null 2>&1
+echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean read depth...(Stage 4 of 7)\n"
+	
+###Concatonates and asseses GC content (if less than 0.1 or more than 0.9 -> print to new file
+cat DATA_GC_percent.txt | awk '{if ($2 < 0.1 || $2 > 0.9) print $1}' > extreme_gc_targets.txt
+###Centers the data about the mean and filters high/low GC intervals out of analysis
+xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 10 --maxTargetSize 10000 --minMeanTargetRD 10 --maxMeanTargetRD 500 --minMeanSampleRD 25 --maxMeanSampleRD 200 --maxSdSampleRD 150 > /dev/null 2>&1
+
+echo -e "## XHMM ANALYSIS ## - Analysing PCA plot & Normalising data...(Stage 5 of 7)\n"
+###Performs PCA to generate component variation - decreases data variability due to 1st-nth priciple components
+xhmm --PCA -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PCA > /dev/null 2>&1
+
+###Normalises the mean centered data using the PCA data
+xhmm --normalize -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PCA --normalizeOutput xhmmCNV.PCA_normalized.txt --PCnormalizeMethod PVE_mean --PVE_mean_factor 0.7 > /dev/null 2>&1
+
+###Generates and asseses z-score distribution of mean centered-normalised read depth data and filters inappropriate intervals
+xhmm --matrix -r xhmmCNV.PCA_normalized.txt --centerData --centerType sample --zScoreData -o xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt --outputExcludedTargets xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt.filtered_samples.txt --maxSdTargetRD 30 > /dev/null 2>&1
+
+###applies the normalisation and z-scoring to the standard non-normalised and centered data set
+xhmm --matrix -r xhmmCNV.mergeDepths.txt --excludeTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --excludeTargets xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt.filtered_targets.txt --excludeSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeSamples xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt.filtered_samples.txt -o xhmmCNV.same_filtered.RD.txt > /dev/null 2>&1
+	
+###performs assessment of the z-score to identify high levels of statistcal deviation in interval regions
+xhmm --discover -p ${params} -r xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt -R xhmmCNV.same_filtered.RD.txt -c xhmmCNV.xcnv -a xhmmCNV.aux_xcnv -s xhmmCNV > /dev/null 2>&1
+
+echo -e "## XHMM ANALYSIS ## - Genotyping called CNVs...(Stage 6 of 7)\n"
+
+###genotypes indentified CNV during prior discovery steps
+xhmm --genotype -p ${params} -r xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt -R xhmmCNV.same_filtered.RD.txt -g xhmmCNV.xcnv -F ${ref} -v xhmmCNV.vcf > /dev/null 2>&1
+
+###Results annotation & formatting##
+echo -e "## XHMM ANALYSIS ## - Annotating & formatting output...(Stage 7 of 7)\n"
+
+###xcnv to bed format conversion
+if (( $(cat xhmmCNV.xcnv | wc -l) < '2' )); then
+	echo -e "## XHMM ANALYSIS ## - ERROR: No CNVs called - Likely too few samples\n"
+	echo -e "## XHMM ANALYSIS ## - XHMM analysis exiting"
+	exit
+fi 
+#sed '1d' xhmmCNV.xcnv > xhmmCNV.bed
+#vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\S\+\t\(\S\+\)\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+/\1\t\2\t\3/g|wq" xhmmCNV.bed
+###subsitition of xhmm xcnv file for removing extra columns
+#vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\):\(\S\+\)-\(\S\+\)/chr\3\t\4\t\5\t\2_\1/g|wq" xhmmCNV.bed
+###rearranging trimmed columns into bed4 format (chr, start, end, info)
+#sort -k 1,1 -k 2,2 xhmmCNV.bed > xhmmCNV.sort.bed
+#mv xhmmCNV.sort.bed xhmmCNV.bed
+###Intersect of found cnvs with known ref gene intervals - one result per interval
+#intersectBed -a xhmmCNV.bed -b ${refbed} -wb > xhmmCNV.anno.tsv
+###Output formating sed commands and header addition
+#vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\4\t\1\t\2\t\3\t\8\t\5\t\6\t\7/g|wq" xhmmCNV.anno.tsv
+#vim -c "%s/\(DEL\)_\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\2\t\1\t\3\t\4\t\5\t\6\t\7\t\8\t\9/g|wq" xhmmCNV.anno.tsv
+#vim -c "%s/\(DUP\)_\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\2\t\1\t\3\t\4\t\5\t\6\t\7\t\8\t\9/g|wq" xhmmCNV.anno.tsv
+#echo -e "sample\tcnv_type\tchr\tstart\tend\tgene\tgene_chr\tgene_start\tgene_end" > xhmmheader.tsv
+#cat xhmmCNV.anno.tsv >> xhmmheader.tsv
+#mv xhmmheader.tsv ../xhmmCNV.anno.tsv
+mv xhmmCNV.vcf ../xhmmCNV.vcf
+mv xhmmCNV.xcnv ../xhmmCNV.xcnv
+mv bam_list_xhmm ../xhmm_samplelist.txt
+#if [[ "$temp" == "FALSE" ]]; then
+#	cd ../
+#	rm -r temp
+#fi
+echo -e "## XHMM ANALYSIS ## - COMPLETE!"
