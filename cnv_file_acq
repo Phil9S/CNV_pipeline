@@ -1,0 +1,37 @@
+################ Exon Interval file ###############
+wget -c -O hg38_exons_Ensembl87.txt 'http://www.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "0" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "chromosome_name" /><Attribute name = "exon_chrom_start" /><Attribute name = "exon_chrom_end" /><Attribute name = "external_gene_name" /><Attribute name = "rank" /></Dataset></Query>'
+
+vim -c 's/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1\t\2\t\3\t\4_exon\5/' hg38_exons_Ensembl87.txt
+sort -k1,1 -k2,2n hg38_exons_Ensembl87.txt > hg38_exons_Ensembl87.sorted.txt
+
+R:
+t <- read.table("hg38_exons_Ensembl87.sorted.txt", sep="\t")
+l <- unique(t$V1)
+t1 <- t[t$V1 %in% l[c(1:22,349:350)],]
+write.table(t1, "hg38_exons_Ensembl87.autoXY.sorted.txt", sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)
+R end
+mv hg38_exons_Ensembl87.autoXY.sorted.txt hg38_exons_Ensembl87.autoXY.sorted.bed
+
+################ Repeatmask files #################
+wget -c "http://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz"
+gunzip hg38.fa.out.gz 
+awk -v OFS="\t" '$1=$1' hg38.fa.out > hg38_tab.fa.out
+grep "Simple_repeat" hg38_tab.fa.out >> lowcomplex_simpreps.hg38.bed
+grep "Low_complexity" hg38_tab.fa.out >> lowcomplex_simpreps.hg38.bed
+sort -k1,1 -k2,2n lowcomplex_simpreps.hg38.bed > lowcomplex_simpreps.sorted.hg38.bed
+
+########## generating list of overlapping intervals ##############
+bedtools intersect -wb -F 0.25 -a hg38_exons_Ensembl87.autoXY.sorted.bed -b lowcomplex_simpreps.sorted.hg38.bed > exon_repmask_overlap.txt
+vim -c '%s/\S\+\t\S\+\t\S\+\t\(\S\+\)\t\S\+\t\S\+\t\S\+\t\S\+/\1/' exon_repmask_overlap.txt
+sort -u exon_repmask_overlap.txt > exon_repmask_overlap.uniq.txt
+
+R:
+t <- read.table("hg38_exons_Ensembl87.", sep="\t")
+l <- read.table("exon_repmask_overlap.uniq.txt")
+t1 <- t[!t$V4 %in% l$V1,]
+write.table(t1, "hg38_exons_Ensembl87.masked.autoXY.sorted.bed", sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)
+R end
+
+Interval file for CNV analysis hg38_exons_Ensembl87.masked.autoXY.sorted.bed
+Original number of intervals - 1181871
+Removed repeat mask intervals - 35967

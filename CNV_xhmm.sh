@@ -197,7 +197,7 @@ else
 fi
 cd xhmm_analysis_${timestamp}/temp
 cp ${int} xhmm.intervals
-vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals 
+vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals 
 interval="xhmm.intervals"		
 find ${inputfolder} -name *.bam -type f > bam_list_xhmm
 
@@ -226,7 +226,7 @@ echo -e "## XHMM ANALYSIS ## - Merging depth of coverage files & Calculating GC 
 xhmm --mergeGATKdepths -o xhmmCNV.mergeDepths.txt --GATKdepths bam_chunkOUT1.sample_interval_summary --GATKdepths bam_chunkOUT2.sample_interval_summary --GATKdepths bam_chunkOUT3.sample_interval_summary --GATKdepths bam_chunkOUT4.sample_interval_summary > /dev/null 2>&1
 
 ###calculates the GC Content of the exome intervals
-java -Xmx3072m -jar ${gatk} -T GCContentByInterval -L ${interval} -R ${ref} -o DATA_GC_percent.txt > /dev/null 2>&1
+java -Xmx30g -jar ${gatk} -T GCContentByInterval -L ${interval} -R ${ref} -o DATA_GC_percent.txt > /dev/null 2>&1
 echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean read depth...(Stage 4 of 7)\n"
 	
 ###Concatonates and asseses GC content (if less than 0.1 or more than 0.9 -> print to new file
