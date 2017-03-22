@@ -121,6 +121,7 @@ done
 
 
 ##Argument Checking Block
+
 ##INPUT
 if [[ ! -d ${inputfolder} ]]; then
 	echo -e "\n## CNV Pipeline ##\nERROR: The input folder provided does not exist - Please confirm the input folder path\nExiting Now"
@@ -131,6 +132,7 @@ if [[ `ls ${inputfolder} | wc -l` < '1' ]]; then
 	echo -e "## CNV Pipeline ##\nERROR: The input folder provided contains no files - Please confirm the input folder path\nExiting Now"
 	exit
 fi
+
 ##OUTPUT
 if [[ ! -d ${outputfolder} ]]; then
 	echo -e "\n## CNV Pipeline ##\nERROR: Output folder provided does not exist, provided using -o / --output - Please use -h / --help for documentation\nExiting Now"
@@ -141,18 +143,6 @@ if [[ ! -w ${outputfolder} ]]; then
 	echo -e "\n ## CNV Pipeline ##\nERROR: Output folder provided is not writable - Please make sure you have the correct permissions and are not writing in a protected folder\nExiting Now"
 	exit
 fi
-
-
-##REF BED
-#if [[ "$refbed" == "NULL" ]]; then
-#	echo -e "\n## CNV Pipeline ##\nERROR: No reference bed file (gene intverals) specified, provided by -b / --bed - Please use -h / --help for documentation\nExiting Now"
-#	exit
-#fi
-
-#if [[ ! -f ${refbed} ]]; then
-#	echo -e "\n## CNV Pipeline ##\nERROR: Specifed reference bed file does not exist, provided by -b / --bed - Please use -h / --help for documentation\nExiting Now"
-#	exit
-#fi
 
 ##INTERVAL
 if [[ "$int" == "NULL" ]]; then
@@ -175,6 +165,7 @@ if [ -d "${outputfolder}cnv_analysis" ]; then
 else
 	mkdir ${outputfolder}cnv_analysis
 fi
+cp cnvPCA.R ${outputfoler}cnv_analysis
 cd ${outputfolder}cnv_analysis
 
 
@@ -195,6 +186,7 @@ if [ -d "xhmm_analysis_${timestamp}/temp" ]; then
 else 
 	mkdir xhmm_analysis_${timestamp}/temp
 fi
+mv cnvPCA.R xhmm_analysis_${timestamp}/temp
 cd xhmm_analysis_${timestamp}/temp
 cp ${int} xhmm.intervals
 vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals 
@@ -232,11 +224,14 @@ echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean
 ###Concatonates and asseses GC content (if less than 0.1 or more than 0.9 -> print to new file
 cat DATA_GC_percent.txt | awk '{if ($2 < 0.1 || $2 > 0.9) print $1}' > extreme_gc_targets.txt
 ###Centers the data about the mean and filters high/low GC intervals out of analysis
-xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 10 --maxTargetSize 10000 --minMeanTargetRD 10 --maxMeanTargetRD 500 --minMeanSampleRD 25 --maxMeanSampleRD 200 --maxSdSampleRD 150 > /dev/null 2>&1
+xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 10 --maxTargetSize 10000 --minMeanTargetRD 30 --maxMeanTargetRD 500 --minMeanSampleRD 30 --maxMeanSampleRD 400 --maxSdSampleRD 150 > /dev/null 2>&1
 
 echo -e "## XHMM ANALYSIS ## - Analysing PCA plot & Normalising data...(Stage 5 of 7)\n"
 ###Performs PCA to generate component variation - decreases data variability due to 1st-nth priciple components
 xhmm --PCA -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PCA > /dev/null 2>&1
+
+wd=`pwd`
+Rscript cnvPCA.R ${wd}
 
 ###Normalises the mean centered data using the PCA data
 xhmm --normalize -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PCA --normalizeOutput xhmmCNV.PCA_normalized.txt --PCnormalizeMethod PVE_mean --PVE_mean_factor 0.7 > /dev/null 2>&1
@@ -264,27 +259,26 @@ if (( $(cat xhmmCNV.xcnv | wc -l) < '2' )); then
 	echo -e "## XHMM ANALYSIS ## - XHMM analysis exiting"
 	exit
 fi 
-#sed '1d' xhmmCNV.xcnv > xhmmCNV.bed
-#vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\S\+\t\(\S\+\)\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+\t\S\+/\1\t\2\t\3/g|wq" xhmmCNV.bed
-###subsitition of xhmm xcnv file for removing extra columns
-#vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\):\(\S\+\)-\(\S\+\)/chr\3\t\4\t\5\t\2_\1/g|wq" xhmmCNV.bed
-###rearranging trimmed columns into bed4 format (chr, start, end, info)
-#sort -k 1,1 -k 2,2 xhmmCNV.bed > xhmmCNV.sort.bed
-#mv xhmmCNV.sort.bed xhmmCNV.bed
-###Intersect of found cnvs with known ref gene intervals - one result per interval
-#intersectBed -a xhmmCNV.bed -b ${refbed} -wb > xhmmCNV.anno.tsv
-###Output formating sed commands and header addition
-#vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\4\t\1\t\2\t\3\t\8\t\5\t\6\t\7/g|wq" xhmmCNV.anno.tsv
-#vim -c "%s/\(DEL\)_\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\2\t\1\t\3\t\4\t\5\t\6\t\7\t\8\t\9/g|wq" xhmmCNV.anno.tsv
-#vim -c "%s/\(DUP\)_\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\2\t\1\t\3\t\4\t\5\t\6\t\7\t\8\t\9/g|wq" xhmmCNV.anno.tsv
-#echo -e "sample\tcnv_type\tchr\tstart\tend\tgene\tgene_chr\tgene_start\tgene_end" > xhmmheader.tsv
-#cat xhmmCNV.anno.tsv >> xhmmheader.tsv
-#mv xhmmheader.tsv ../xhmmCNV.anno.tsv
+
 mv xhmmCNV.vcf ../xhmmCNV.vcf
 mv xhmmCNV.xcnv ../xhmmCNV.xcnv
 mv bam_list_xhmm ../xhmm_samplelist.txt
-#if [[ "$temp" == "FALSE" ]]; then
-#	cd ../
-#	rm -r temp
-#fi
+mv PCA_scree.png ../PCA_scree.png
+
+
+echo -e "## XHMM ANALYSIS ## - Generating Genotype calls and filtering CNVs on MAF and Missingness"
+bcftools query --print-header -f '%CHROM\t%POS\t%REF\t%ALT[\t%GT]\n' xhmmCNV.vcf.gz | sed 's/\[[0-9]\+\]//g' \
+| sed 's/# CHROM/CHROM/' \
+| sed 's/:GT//g' > GT.table
+
+
+bcftools query --print-header -f '%CHROM\t%POS\t%REF\t%ALT[\t%ORD]\n' xhmmCNV.vcf.gz | sed 's/\[[0-9]\+\]//g' \
+| sed 's/# CHROM/CHROM/' \
+| sed 's/:ORD//g' > ORD.table
+
+if [[ "$temp" == "FALSE" ]]; then
+       cd ../
+       rm -r temp
+fi
+
 echo -e "## XHMM ANALYSIS ## - COMPLETE!"
