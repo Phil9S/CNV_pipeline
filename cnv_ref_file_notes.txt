@@ -32,6 +32,15 @@ t1 <- t[!t$V4 %in% l$V1,]
 write.table(t1, "hg38_exons_Ensembl87.masked.autoXY.sorted.bed", sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)
 R end
 
-Interval file for CNV analysis hg38_exons_Ensembl87.masked.autoXY.sorted.bed
+###adding padding to exon regions - 2bp upstream of start and 2bp downstream of end
+R:
+t <- read.table("hg38_exons_Ensembl87.masked.autoXY.sorted.bed", sep="\t")
+n <- t
+n$V2 <- n$V2 - 2
+n$V3 <- n$V3 + 2
+write.table(n, "hg38_exons_Ensembl87.masked.autoXY.sorted.pad.bed", sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
+R end
+
+Interval file for CNV analysis hg38_exons_Ensembl87.masked.autoXY.sorted.pad.bed
 Original number of intervals - 1181871
 Removed repeat mask intervals - 35967

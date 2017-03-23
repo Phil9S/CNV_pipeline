@@ -5,7 +5,6 @@ gatk="/data/Resources/Software/GenomeAnalysisTK.jar"
 ref="/data/Resources/hg38_2/hg38_2MergeAll.fa"
 ##Command-line variables
 inputfolder="NULL"
-#refbed="NULL"
 int="NULL"
 params="NULL"
 timestamp=$(date +"%m_%Y")
@@ -111,10 +110,6 @@ while [[ $# > 1 ]]
 		int=$2
 		shift
 		;;
-#		-b|--bed)
-#  	refbed=$2
-#		shift
-#		;;    
 	esac
 	shift
 done
@@ -165,9 +160,9 @@ if [ -d "${outputfolder}cnv_analysis" ]; then
 else
 	mkdir ${outputfolder}cnv_analysis
 fi
-cp cnvPCA.R ${outputfoler}cnv_analysis
+pwd
+cp cnvPCA.R ${outputfolder}cnv_analysis/
 cd ${outputfolder}cnv_analysis
-
 
 
 ###XHMM output process block##
@@ -189,24 +184,95 @@ fi
 mv cnvPCA.R xhmm_analysis_${timestamp}/temp
 cd xhmm_analysis_${timestamp}/temp
 cp ${int} xhmm.intervals
-vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals 
+vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals
 interval="xhmm.intervals"		
 find ${inputfolder} -name *.bam -type f > bam_list_xhmm
 
 ###XHMM Analysis
-
+date
 echo -e "## XHMM ANALYSIS ## - Bam files split into 4 sets...(Stage 1 of 7)\n"
-split -a 1 --numeric-suffixes=1 --additional-suffix=.list -n l/4 bam_list_xhmm bam_chunk
+split -a 1 --numeric-suffixes=1 --additional-suffix=.list -n l/6 bam_list_xhmm bam_chunk
 
 echo -e "## XHMM ANALYSIS ## - Performing depth of coverage...(Stage 2 of 7)\n"
 
-java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk1.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable --minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 --includeRefNSites --countType COUNT_FRAGMENTS -o bam_chunkOUT1 &
+java -Xmx16g -jar ${gatk} -T DepthOfCoverage -I bam_chunk1.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+-l INFO \
+--omitDepthOutputAtEachBase \
+--omitLocusTable \
+--minBaseQuality 0 \
+--minMappingQuality 20 \
+--start 1 \
+--stop 5000 \
+--nBins 200 \
+--includeRefNSites \
+--countType COUNT_FRAGMENTS \
+-o bam_chunkOUT1 > /dev/null 2>&1 &
 
-java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk2.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable --minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 --includeRefNSites --countType COUNT_FRAGMENTS -o bam_chunkOUT2 &
+java -Xmx16g -jar ${gatk} -T DepthOfCoverage -I bam_chunk2.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+-l INFO \
+--omitDepthOutputAtEachBase \
+--omitLocusTable \
+--minBaseQuality 0 \
+--minMappingQuality 20 \
+--start 1 \
+--stop 5000 \
+--nBins 200 \
+--includeRefNSites \
+--countType COUNT_FRAGMENTS \
+-o bam_chunkOUT2 > /dev/null 2>&1 &
 
-java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk3.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable --minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 --includeRefNSites --countType COUNT_FRAGMENTS -o bam_chunkOUT3 &
+java -Xmx16g -jar ${gatk} -T DepthOfCoverage -I bam_chunk3.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+-l INFO \
+--omitDepthOutputAtEachBase \
+--omitLocusTable \
+--minBaseQuality 0 \
+--minMappingQuality 20 \
+--start 1 \
+--stop 5000 \
+--nBins 200 \
+--includeRefNSites \
+--countType COUNT_FRAGMENTS \
+-o bam_chunkOUT3 &
 
-java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk4.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 -l INFO --omitDepthOutputAtEachBase --omitLocusTable --minBaseQuality 0 --minMappingQuality 20 --start 1 --stop 5000 --nBins 200 --includeRefNSites --countType COUNT_FRAGMENTS -o bam_chunkOUT4 &
+java -Xmx16g -jar ${gatk} -T DepthOfCoverage -I bam_chunk4.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+-l INFO \
+--omitDepthOutputAtEachBase \
+--omitLocusTable \
+--minBaseQuality 0 \
+--minMappingQuality 20 \
+--start 1 \
+--stop 5000 \
+--nBins 200 \
+--includeRefNSites \
+--countType COUNT_FRAGMENTS \
+-o bam_chunkOUT4 > /dev/null 2>&1 &
+
+java -Xmx16g -jar ${gatk} -T DepthOfCoverage -I bam_chunk5.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+-l INFO \
+--omitDepthOutputAtEachBase \
+--omitLocusTable \
+--minBaseQuality 0 \
+--minMappingQuality 20 \
+--start 1 \
+--stop 5000 \
+--nBins 200 \
+--includeRefNSites \
+--countType COUNT_FRAGMENTS \
+-o bam_chunkOUT5 > /dev/null 2>&1 &
+
+java -Xmx16g -jar ${gatk} -T DepthOfCoverage -I bam_chunk6.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+-l INFO \
+--omitDepthOutputAtEachBase \
+--omitLocusTable \
+--minBaseQuality 0 \
+--minMappingQuality 20 \
+--start 1 \
+--stop 5000 \
+--nBins 200 \
+--includeRefNSites \
+--countType COUNT_FRAGMENTS \
+-o bam_chunkOUT6 > /dev/null 2>&1 &
+
 
 ###Allow for all child processes in parallel to complete
 wait
@@ -215,7 +281,13 @@ sleep 5
 echo -e "## XHMM ANALYSIS ## - Merging depth of coverage files & Calculating GC content...(Stage 3 of 7)\n"
 	
 ###Combines GATK Depth-of-Coverage outputs for multiple samples (at same loci):
-xhmm --mergeGATKdepths -o xhmmCNV.mergeDepths.txt --GATKdepths bam_chunkOUT1.sample_interval_summary --GATKdepths bam_chunkOUT2.sample_interval_summary --GATKdepths bam_chunkOUT3.sample_interval_summary --GATKdepths bam_chunkOUT4.sample_interval_summary > /dev/null 2>&1
+xhmm --mergeGATKdepths -o xhmmCNV.mergeDepths.txt \
+--GATKdepths bam_chunkOUT1.sample_interval_summary \
+--GATKdepths bam_chunkOUT2.sample_interval_summary \
+--GATKdepths bam_chunkOUT3.sample_interval_summary \
+--GATKdepths bam_chunkOUT4.sample_interval_summary \
+--GATKdepths bam_chunkOUT5.sample_interval_summary \
+--GATKdepths bam_chunkOUT6.sample_interval_summary > /dev/null 2>&1
 
 ###calculates the GC Content of the exome intervals
 java -Xmx30g -jar ${gatk} -T GCContentByInterval -L ${interval} -R ${ref} -o DATA_GC_percent.txt > /dev/null 2>&1
@@ -224,7 +296,8 @@ echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean
 ###Concatonates and asseses GC content (if less than 0.1 or more than 0.9 -> print to new file
 cat DATA_GC_percent.txt | awk '{if ($2 < 0.1 || $2 > 0.9) print $1}' > extreme_gc_targets.txt
 ###Centers the data about the mean and filters high/low GC intervals out of analysis
-xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 10 --maxTargetSize 10000 --minMeanTargetRD 30 --maxMeanTargetRD 500 --minMeanSampleRD 30 --maxMeanSampleRD 400 --maxSdSampleRD 150 > /dev/null 2>&1
+### EDIT THESE VALUES based on STD RD of cohort being analysed ###
+xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 10 --maxTargetSize 10000 --minMeanTargetRD 20 --maxMeanTargetRD 500 --minMeanSampleRD 24 --maxMeanSampleRD 60 --maxSdSampleRD 150 > /dev/null 2>&1
 
 echo -e "## XHMM ANALYSIS ## - Analysing PCA plot & Normalising data...(Stage 5 of 7)\n"
 ###Performs PCA to generate component variation - decreases data variability due to 1st-nth priciple components
@@ -271,7 +344,6 @@ bcftools query --print-header -f '%CHROM\t%POS\t%REF\t%ALT[\t%GT]\n' xhmmCNV.vcf
 | sed 's/# CHROM/CHROM/' \
 | sed 's/:GT//g' > GT.table
 
-
 bcftools query --print-header -f '%CHROM\t%POS\t%REF\t%ALT[\t%ORD]\n' xhmmCNV.vcf.gz | sed 's/\[[0-9]\+\]//g' \
 | sed 's/# CHROM/CHROM/' \
 | sed 's/:ORD//g' > ORD.table
@@ -282,3 +354,4 @@ if [[ "$temp" == "FALSE" ]]; then
 fi
 
 echo -e "## XHMM ANALYSIS ## - COMPLETE!"
+date
