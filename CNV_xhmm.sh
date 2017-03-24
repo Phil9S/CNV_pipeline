@@ -190,7 +190,7 @@ find ${inputfolder} -name *.bam -type f > bam_list_xhmm
 
 ###XHMM Analysis
 date
-echo -e "## XHMM ANALYSIS ## - Bam files split into 4 sets...(Stage 1 of 7)\n"
+echo -e "## XHMM ANALYSIS ## - Bam files split into 6 sets...(Stage 1 of 7)\n"
 split -a 1 --numeric-suffixes=1 --additional-suffix=.list -n l/6 bam_list_xhmm bam_chunk
 
 echo -e "## XHMM ANALYSIS ## - Performing depth of coverage...(Stage 2 of 7)\n"
@@ -306,6 +306,18 @@ xhmm --PCA -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PC
 wd=`pwd`
 Rscript cnvPCA.R ${wd}
 
+vim -c '%s/\(Variance threshold at Principle component: \)\(\S\+\)/\r\1\2/|wq' PCA_summary.txt
+vim -c '%s/ Standard deviation/\rStandard deviation/g|wq' PCA_summary.txt
+vim -c '%s/ Proportion of Variance/\rProportion of Variance/g|wq' PCA_summary.txt
+vim -c '%s/ Cumulative Proportion/\rCumulative Proportion/g|wq' PCA_summary.txt
+vim -c '%s/\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)/\rComponent\t\1\t\2\t\3\t\4\t\5/g|wq' PCA_summary.txt
+vim -c '%s/\(Standard deviation\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6/g|wq' PCA_summary.txt
+vim -c '%s/\(Proportion of Variance\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6/g|wq' PCA_summary.txt
+vim -c '%s/\(Cumulative Proportion\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6/g|wq' PCA_summary.txt
+vim -c '1d|wq' PCA_summary.txt
+vim -c '$m 0|wq' PCA_summary.txt
+
+
 ###Normalises the mean centered data using the PCA data
 xhmm --normalize -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PCA --normalizeOutput xhmmCNV.PCA_normalized.txt --PCnormalizeMethod PVE_mean --PVE_mean_factor 0.7 > /dev/null 2>&1
 
@@ -336,8 +348,12 @@ fi
 mv xhmmCNV.vcf ../xhmmCNV.vcf
 mv xhmmCNV.xcnv ../xhmmCNV.xcnv
 mv bam_list_xhmm ../xhmm_samplelist.txt
-mv PCA_scree.png ../PCA_scree.png
+mv PCA_Scree.png ../PCA_Scree.png
+mv PCA_summary.txt ../PCA_summary.txt
 
+cd ../
+bgzip -c xhmmCNV.vcf > xhmmCNV.vcf.gz
+tabix xhmmCNV.vcf.gz
 
 echo -e "## XHMM ANALYSIS ## - Generating Genotype calls and filtering CNVs on MAF and Missingness"
 bcftools query --print-header -f '%CHROM\t%POS\t%REF\t%ALT[\t%GT]\n' xhmmCNV.vcf.gz | sed 's/\[[0-9]\+\]//g' \
@@ -349,8 +365,7 @@ bcftools query --print-header -f '%CHROM\t%POS\t%REF\t%ALT[\t%ORD]\n' xhmmCNV.vc
 | sed 's/:ORD//g' > ORD.table
 
 if [[ "$temp" == "FALSE" ]]; then
-       cd ../
-       rm -r temp
+              rm -r temp
 fi
 
 echo -e "## XHMM ANALYSIS ## - COMPLETE!"
