@@ -70,6 +70,9 @@ n$V3 <- n$V3 + 2
 write.table(n, "hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed", sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
 R end
 
+###sort file
+sort -k1,1 -k2,2n hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed > hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bedsort
+mv hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bedsort hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed
 Interval file for CNV analysis -> hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed (8,875Kb)
 
 Removal summary:
