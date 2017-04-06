@@ -195,11 +195,7 @@ split -a 1 --numeric-suffixes=1 --additional-suffix=.list -n l/6 bam_list_xhmm b
 
 echo -e "## XHMM ANALYSIS ## - Performing depth of coverage...(Stage 2 of 7)\n"
 
-<<<<<<< HEAD
 java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk1.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
-=======
-java -Xmx20g -jar ${gatk} -T DepthOfCoverage -I bam_chunk1.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
->>>>>>> 5f631ae7e6dfe338cfb05071c573b7c8867c1d36
 -l INFO \
 --omitDepthOutputAtEachBase \
 --omitLocusTable \
@@ -212,11 +208,7 @@ java -Xmx20g -jar ${gatk} -T DepthOfCoverage -I bam_chunk1.list -L ${interval} -
 --countType COUNT_FRAGMENTS \
 -o bam_chunkOUT1 > /dev/null 2>&1 &
 
-<<<<<<< HEAD
 java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk2.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
-=======
-java -Xmx20g -jar ${gatk} -T DepthOfCoverage -I bam_chunk2.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
->>>>>>> 5f631ae7e6dfe338cfb05071c573b7c8867c1d36
 -l INFO \
 --omitDepthOutputAtEachBase \
 --omitLocusTable \
@@ -229,11 +221,7 @@ java -Xmx20g -jar ${gatk} -T DepthOfCoverage -I bam_chunk2.list -L ${interval} -
 --countType COUNT_FRAGMENTS \
 -o bam_chunkOUT2 > /dev/null 2>&1 &
 
-<<<<<<< HEAD
 java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk3.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
-=======
-java -Xmx20g -jar ${gatk} -T DepthOfCoverage -I bam_chunk3.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
->>>>>>> 5f631ae7e6dfe338cfb05071c573b7c8867c1d36
 -l INFO \
 --omitDepthOutputAtEachBase \
 --omitLocusTable \
@@ -246,11 +234,7 @@ java -Xmx20g -jar ${gatk} -T DepthOfCoverage -I bam_chunk3.list -L ${interval} -
 --countType COUNT_FRAGMENTS \
 -o bam_chunkOUT3 &
 
-<<<<<<< HEAD
 java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk4.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
-=======
-java -Xmx20g -jar ${gatk} -T DepthOfCoverage -I bam_chunk4.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
->>>>>>> 5f631ae7e6dfe338cfb05071c573b7c8867c1d36
 -l INFO \
 --omitDepthOutputAtEachBase \
 --omitLocusTable \
@@ -263,11 +247,7 @@ java -Xmx20g -jar ${gatk} -T DepthOfCoverage -I bam_chunk4.list -L ${interval} -
 --countType COUNT_FRAGMENTS \
 -o bam_chunkOUT4 > /dev/null 2>&1 &
 
-<<<<<<< HEAD
 java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk5.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
-=======
-java -Xmx20g -jar ${gatk} -T DepthOfCoverage -I bam_chunk5.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
->>>>>>> 5f631ae7e6dfe338cfb05071c573b7c8867c1d36
 -l INFO \
 --omitDepthOutputAtEachBase \
 --omitLocusTable \
@@ -280,11 +260,7 @@ java -Xmx20g -jar ${gatk} -T DepthOfCoverage -I bam_chunk5.list -L ${interval} -
 --countType COUNT_FRAGMENTS \
 -o bam_chunkOUT5 > /dev/null 2>&1 &
 
-<<<<<<< HEAD
 java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk6.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
-=======
-java -Xmx20g -jar ${gatk} -T DepthOfCoverage -I bam_chunk6.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
->>>>>>> 5f631ae7e6dfe338cfb05071c573b7c8867c1d36
 -l INFO \
 --omitDepthOutputAtEachBase \
 --omitLocusTable \
