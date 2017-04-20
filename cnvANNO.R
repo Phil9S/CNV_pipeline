@@ -57,8 +57,6 @@ colnames(q.tar) <- c("Q_SOME", "TARGETS")
 x <- cbind(x,q.tar)
 rm(q.value,tar.value,q.tar,q,i)
 
-###Filter output table by Q_SOME at >60 - PHRED Scaled
-x <- x[x$Q_SOME >= 60,]
 
 ###Generate exon call frequencys
 af.table <- as.data.frame(table(x$EXON))
