@@ -79,8 +79,8 @@ x <- x[,-(c(6,8:9))]
 #freq.list <- as.vector(unique(x$EXON[x$AF_all > 0.05]))
 #write.table(freq.list, file = "BC1958_freqentCNVs_5pct.txt", col.names = FALSE, row.names = FALSE, quote = FALSE)
 
-###all exons with AF more than 0.05 in analysis cohort
-x <- x[x$AF_all < 0.05,]
+###all exons with AF more than 0.05 in analysis cohort - removed for now - causes loss of all rows and errors if no output is < value
+#x <- x[x$AF_all < 0.05,]
 ###remove commonly altered exons in BC1958 Cohort
 if(exists("freq.list")){
   x <- x[!(x$EXON %in% freq.list),]
