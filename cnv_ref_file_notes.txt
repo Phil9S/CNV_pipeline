@@ -1,3 +1,13 @@
+################ BC1958 Reference for frequently altered exons ##############
+file was generated after initial runnig of the CNV pipeline of the 1958BC cohort
+Exons were selected from the output results from xhmm which occured at a frequency greater than 5%
+across all 1000 samples
+R (in cnvANNO - commented out):
+freq.list <- as.vector(unique(x$EXON[x$AF_all > 0.05]))
+write.table(freq.list, file = "BC1958_freqentCNVs_5pct.txt", col.names = FALSE, row.names = FALSE, quote = FALSE)
+R end
+
+
 ################ Exon Interval file ###############
 
 wget -c -O hg38_exons_Ensembl87.txt 'http://www.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "0" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "chromosome_name" /><Attribute name = "exon_chrom_start" /><Attribute name = "exon_chrom_end" /><Attribute name = "external_gene_name" /><Attribute name = "rank" /></Dataset></Query>'

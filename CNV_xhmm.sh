@@ -9,7 +9,9 @@ int="NULL"
 params="NULL"
 timestamp=$(date +"%m_%Y")
 outputfolder="NULL"
-temp="FALSE"
+temp="TRUE"
+
+
 
 ##Admin BLOCK - Help, temp files, default message
 #help
@@ -43,15 +45,12 @@ ARUGMENT			TYPE				DESCRIPTION
 								file named Nextera_Exome_hg38, in tsv bed format,
 								BED4 without header.
 								
--b --bed			file				Bed file consisting of the interval positions of
-								each gene. Used as a reference file for called
-								CNVs and annotation of their proximal positions.
 
 -t --temp			argument			Providing the option -t or --temp, given without
 								a proceeding file/folder/string, etc. results in
-								the retention of all temporary files generated
-								during the CNV analysis. Mostly for DEBUGGING or
-								QC and error checks.
+								the DELETION of all temporary files generated
+								during the CNV analysis, inlcuding Depth of cov-
+								erage.
 Dependencies:
 
 Will only run on Server: Whisperwind (without modification)
@@ -59,17 +58,17 @@ Will only run on Server: Whisperwind (without modification)
 Packages:
 - xhmm		
 - GATK	
-- bedtools
+- R (ggplot2, cowplot, stringr)
 
 Core utilities:
 - vim		- cat
 - find		- sort
-- sed
+- sed		- awk
 
 Examples:
 
 Running xhmm analysis on a folder containing bams:
-./CNV_analysis.sh -i /data/BAMS/ -o /data/CNV_REULTS/ -p /xhmm/files/params.txt -v /data/ref/nextera_exome_targets.bed -b /data/ref/hg38_genes.bed
+./CNV_analysis.sh -i /data/BAMS/ -o /data/CNV_REULTS/ -p /xhmm/files/params.txt -v /data/ref/nextera_exome_targets.bed --temp
 		"			               
 		echo -e "\n"
 		exit
@@ -83,8 +82,8 @@ fi
 #temp file handling
 for arg in "$@"; do
   if [[ "$arg" == "-t" ]] || [[ "$arg" == "--temp" ]]; then
-    echo -e "\n## CNV Pipeline ## - Temporary files are being retained"
-    temp="TRUE"
+    echo -e "\n## CNV Pipeline ## - Temporary files are being DELETED"
+    temp="FALSE"
   fi
 done
 
@@ -162,6 +161,9 @@ else
 fi
 pwd
 cp cnvPCA.R ${outputfolder}cnv_analysis/
+cp cnvANNO.R ${outputfolder}cnv_analysis/
+cp cnvPLOTS.R ${outputfolder}cnv_analysis/
+cp BC1958_freqentCNVs_5pct.txt ${outputfolder}cnv_analysis/
 cd ${outputfolder}cnv_analysis
 
 
@@ -182,18 +184,22 @@ else
 	mkdir xhmm_analysis_${timestamp}/temp
 fi
 mv cnvPCA.R xhmm_analysis_${timestamp}/temp
+mv cnvANNO.R xhmm_analysis_${timestamp}
+mv cnvPLOTS.R xhmm_analysis_${timestamp}
+mv BC1958_freqentCNVs_5pct.txt xhmm_analysis_${timestamp}
 cd xhmm_analysis_${timestamp}/temp
+
 cp ${int} xhmm.intervals
 vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals
-interval="xhmm.intervals"		
-find ${inputfolder} -name *.bam -type f > bam_list_xhmm
+interval="xhmm.intervals"
+ls ${inputfolder}*.bam > bam_list_xhmm
 
 ###XHMM Analysis
 date
-echo -e "## XHMM ANALYSIS ## - Bam files split into 6 sets...(Stage 1 of 7)\n"
+echo -e "## XHMM ANALYSIS ## - Bam files split into 6 sets...(Stage 1 of 9)\n"
 split -a 1 --numeric-suffixes=1 --additional-suffix=.list -n l/6 bam_list_xhmm bam_chunk
 
-echo -e "## XHMM ANALYSIS ## - Performing depth of coverage...(Stage 2 of 7)\n"
+echo -e "## XHMM ANALYSIS ## - Performing depth of coverage...(Stage 2 of 9)\n"
 
 java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk1.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
 -l INFO \
@@ -278,7 +284,7 @@ java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk6.list -L ${interval} -
 wait
 sleep 5
 
-echo -e "## XHMM ANALYSIS ## - Merging depth of coverage files & Calculating GC content...(Stage 3 of 7)\n"
+echo -e "## XHMM ANALYSIS ## - Merging depth of coverage files & Calculating GC content...(Stage 3 of 9)\n"
 	
 ###Combines GATK Depth-of-Coverage outputs for multiple samples (at same loci):
 xhmm --mergeGATKdepths -o xhmmCNV.mergeDepths.txt \
@@ -291,7 +297,7 @@ xhmm --mergeGATKdepths -o xhmmCNV.mergeDepths.txt \
 
 ###calculates the GC Content of the exome intervals
 java -Xmx30g -jar ${gatk} -T GCContentByInterval -L ${interval} -R ${ref} -o DATA_GC_percent.txt > /dev/null 2>&1
-echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean read depth...(Stage 4 of 7)\n"
+echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean read depth...(Stage 4 of 9)\n"
 	
 ###Concatonates and asseses GC content (if less than 0.1 or more than 0.9 -> print to new file
 cat DATA_GC_percent.txt | awk '{if ($2 < 0.1 || $2 > 0.9) print $1}' > extreme_gc_targets.txt
@@ -299,7 +305,7 @@ cat DATA_GC_percent.txt | awk '{if ($2 < 0.1 || $2 > 0.9) print $1}' > extreme_g
 ### EDIT THESE VALUES based on STD RD of cohort being analysed ###
 xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 10 --maxTargetSize 10000 --minMeanTargetRD 20 --maxMeanTargetRD 500 --minMeanSampleRD 24 --maxMeanSampleRD 60 --maxSdSampleRD 150 > /dev/null 2>&1
 
-echo -e "## XHMM ANALYSIS ## - Analysing PCA plot & Normalising data...(Stage 5 of 7)\n"
+echo -e "## XHMM ANALYSIS ## - Analysing PCA plot & Normalising data...(Stage 5 of 9)\n"
 ###Performs PCA to generate component variation - decreases data variability due to 1st-nth priciple components
 xhmm --PCA -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PCA > /dev/null 2>&1
 
@@ -330,39 +336,36 @@ xhmm --matrix -r xhmmCNV.mergeDepths.txt --excludeTargets xhmmCNV.filtered_cente
 ###performs assessment of the z-score to identify high levels of statistcal deviation in interval regions
 xhmm --discover -p ${params} -r xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt -R xhmmCNV.same_filtered.RD.txt -c xhmmCNV.xcnv -a xhmmCNV.aux_xcnv -s xhmmCNV > /dev/null 2>&1
 
-echo -e "## XHMM ANALYSIS ## - Genotyping called CNVs...(Stage 6 of 7)\n"
+echo -e "## XHMM ANALYSIS ## - Genotyping called CNVs...(Stage 6 of 9)\n"
 
 ###genotypes indentified CNV during prior discovery steps
 xhmm --genotype -p ${params} -r xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt -R xhmmCNV.same_filtered.RD.txt -g xhmmCNV.xcnv -F ${ref} -v xhmmCNV.vcf > /dev/null 2>&1
 
 ###Results annotation & formatting##
-echo -e "## XHMM ANALYSIS ## - Annotating & formatting output...(Stage 7 of 7)\n"
+echo -e "## XHMM ANALYSIS ## - Moving output from TEMP...(Stage 7 of 9)\n"
 
 ###xcnv to bed format conversion
 if (( $(cat xhmmCNV.xcnv | wc -l) < '2' )); then
-	echo -e "## XHMM ANALYSIS ## - ERROR: No CNVs called - Likely too few samples\n"
-	echo -e "## XHMM ANALYSIS ## - XHMM analysis exiting"
-	exit
-fi 
+        echo -e "## XHMM ANALYSIS ## - ERROR: No CNVs called - Likely too few samples\n"
+        echo -e "## XHMM ANALYSIS ## - XHMM analysis exiting"
+        exit
+fi
 
-mv xhmmCNV.vcf ../xhmmCNV.vcf
 mv xhmmCNV.xcnv ../xhmmCNV.xcnv
 mv bam_list_xhmm ../xhmm_samplelist.txt
 mv PCA_Scree.png ../PCA_Scree.png
 mv PCA_summary.txt ../PCA_summary.txt
+mv xhmmCNV.aux_xcnv ../xhmmCNV.aux_xcnv
 
 cd ../
-bgzip -c xhmmCNV.vcf > xhmmCNV.vcf.gz
-tabix xhmmCNV.vcf.gz
 
-echo -e "## XHMM ANALYSIS ## - Generating Genotype calls and filtering CNVs on MAF and Missingness"
-bcftools query --print-header -f '%CHROM\t%POS\t%REF\t%ALT[\t%GT]\n' xhmmCNV.vcf.gz | sed 's/\[[0-9]\+\]//g' \
-| sed 's/# CHROM/CHROM/' \
-| sed 's/:GT//g' > GT.table
+echo -e "## XHMM ANALYSIS ## - Annotating output...(Stage 8 of 9)\n"
 
-bcftools query --print-header -f '%CHROM\t%POS\t%REF\t%ALT[\t%ORD]\n' xhmmCNV.vcf.gz | sed 's/\[[0-9]\+\]//g' \
-| sed 's/# CHROM/CHROM/' \
-| sed 's/:ORD//g' > ORD.table
+Rscript cnvANNO.R ${int} > /dev/null 2>&1
+
+echo -e "## XHMM ANALYSIS ## - Plotting Graphs...(Stage 9 of 9)\n"
+Rscript cnvPLOTS.R > /dev/null 2>&1
+
 
 if [[ "$temp" == "FALSE" ]]; then
               rm -r temp
@@ -370,3 +373,4 @@ fi
 
 echo -e "## XHMM ANALYSIS ## - COMPLETE!"
 date
+
