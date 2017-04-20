@@ -159,7 +159,6 @@ if [ -d "${outputfolder}cnv_analysis" ]; then
 else
 	mkdir ${outputfolder}cnv_analysis
 fi
-pwd
 cp cnvPCA.R ${outputfolder}cnv_analysis/
 cp cnvANNO.R ${outputfolder}cnv_analysis/
 cp cnvPLOTS.R ${outputfolder}cnv_analysis/
