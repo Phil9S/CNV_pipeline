@@ -2,18 +2,17 @@
 
 ##Programme and reference files
 gatk="/data/Resources/Software/GenomeAnalysisTK.jar"
-ref="/data/Resources/hg38_2/hg38_2MergeAll.fa"
+ref="/data/Resources/hg38.bwa/hg38.bwaMergeAll.fa"
 ##Command-line variables
 inputfolder="NULL"
 int="NULL"
 params="NULL"
-timestamp=$(date +"%m_%Y")
+timestamp=$(date +"%d_%m_%Y")
 outputfolder="NULL"
 temp="TRUE"
 
 
-
-##Admin BLOCK - Help, temp files, default message
+#Admin BLOCK - Help, temp files, default message
 #help
 for arg in "$@"; do
 	if [[ "$arg" == "-h" ]] || [[ "$arg" == "--help" ]]; then
@@ -46,7 +45,7 @@ ARUGMENT			TYPE				DESCRIPTION
 								BED4 without header.
 								
 
--t --temp			argument			Providing the option -t or --temp, given without
+-tr --temp-remove		argument			Providing the option -t or --temp, given without
 								a proceeding file/folder/string, etc. results in
 								the DELETION of all temporary files generated
 								during the CNV analysis, inlcuding Depth of cov-
@@ -81,7 +80,7 @@ if [[ $# -eq 0 ]]; then
 fi
 #temp file handling
 for arg in "$@"; do
-  if [[ "$arg" == "-t" ]] || [[ "$arg" == "--temp" ]]; then
+  if [[ "$arg" == "-tr" ]] || [[ "$arg" == "--temp-remove" ]]; then
     echo -e "\n## CNV Pipeline ## - Temporary files are being DELETED"
     temp="FALSE"
   fi
@@ -187,6 +186,7 @@ mv cnvANNO.R xhmm_analysis_${timestamp}
 mv cnvPLOTS.R xhmm_analysis_${timestamp}
 mv BC1958_freqentCNVs_5pct.txt xhmm_analysis_${timestamp}
 cd xhmm_analysis_${timestamp}/temp
+
 
 cp ${int} xhmm.intervals
 vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals
@@ -302,7 +302,7 @@ echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean
 cat DATA_GC_percent.txt | awk '{if ($2 < 0.1 || $2 > 0.9) print $1}' > extreme_gc_targets.txt
 ###Centers the data about the mean and filters high/low GC intervals out of analysis
 ### EDIT THESE VALUES based on STD RD of cohort being analysed ###
-xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 10 --maxTargetSize 10000 --minMeanTargetRD 20 --maxMeanTargetRD 500 --minMeanSampleRD 24 --maxMeanSampleRD 60 --maxSdSampleRD 150 > /dev/null 2>&1
+xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 1 --maxTargetSize 10000 --minMeanTargetRD 20 --maxMeanTargetRD 1000 --minMeanSampleRD 105 --maxMeanSampleRD 740 --maxSdSampleRD 200 > /dev/null 2>&1
 
 echo -e "## XHMM ANALYSIS ## - Analysing PCA plot & Normalising data...(Stage 5 of 9)\n"
 ###Performs PCA to generate component variation - decreases data variability due to 1st-nth priciple components
