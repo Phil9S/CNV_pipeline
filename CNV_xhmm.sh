@@ -45,9 +45,9 @@ ARUGMENT			TYPE				DESCRIPTION
 								BED4 without header.
 								
 
--tr --temp-remove		argument			Providing the option -t or --temp, given without
-								a proceeding file/folder/string, etc. results in
-								the DELETION of all temporary files generated
+-tr --temp-remove		argument			Providing the option -tr or --temp-remove, given 
+								without a proceeding file/folder/string results 
+								in the DELETION of all temporary files generated
 								during the CNV analysis, inlcuding Depth of cov-
 								erage.
 Dependencies:
@@ -302,7 +302,7 @@ echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean
 cat DATA_GC_percent.txt | awk '{if ($2 < 0.1 || $2 > 0.9) print $1}' > extreme_gc_targets.txt
 ###Centers the data about the mean and filters high/low GC intervals out of analysis
 ### EDIT THESE VALUES based on STD RD of cohort being analysed ###
-xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 1 --maxTargetSize 10000 --minMeanTargetRD 20 --maxMeanTargetRD 1000 --minMeanSampleRD 105 --maxMeanSampleRD 740 --maxSdSampleRD 200 > /dev/null 2>&1
+xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 1 --maxTargetSize 10000 --minMeanTargetRD 20 --maxMeanTargetRD 3000 --minMeanSampleRD 50 --maxMeanSampleRD 900 --maxSdSampleRD 300 > /dev/null 2>&1
 
 echo -e "## XHMM ANALYSIS ## - Analysing PCA plot & Normalising data...(Stage 5 of 9)\n"
 ###Performs PCA to generate component variation - decreases data variability due to 1st-nth priciple components
