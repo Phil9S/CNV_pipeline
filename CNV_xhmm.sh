@@ -193,6 +193,8 @@ vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals
 interval="xhmm.intervals"
 ls ${inputfolder}*.bam > bam_list_xhmm
 
+#sleep 120
+
 ###XHMM Analysis
 date
 echo -e "## XHMM ANALYSIS ## - Bam files split into 6 sets...(Stage 1 of 9)\n"
@@ -302,7 +304,7 @@ echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean
 cat DATA_GC_percent.txt | awk '{if ($2 < 0.1 || $2 > 0.9) print $1}' > extreme_gc_targets.txt
 ###Centers the data about the mean and filters high/low GC intervals out of analysis
 ### EDIT THESE VALUES based on STD RD of cohort being analysed ###
-xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 1 --maxTargetSize 10000 --minMeanTargetRD 20 --maxMeanTargetRD 3000 --minMeanSampleRD 50 --maxMeanSampleRD 900 --maxSdSampleRD 300 > /dev/null 2>&1
+xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 1 --maxTargetSize 20000 --minMeanTargetRD 10 --maxMeanTargetRD 6000 --minMeanSampleRD 30 --maxMeanSampleRD 2000 --maxSdSampleRD 500 > /dev/null 2>&1
 
 echo -e "## XHMM ANALYSIS ## - Analysing PCA plot & Normalising data...(Stage 5 of 9)\n"
 ###Performs PCA to generate component variation - decreases data variability due to 1st-nth priciple components
