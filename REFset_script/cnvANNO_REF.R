@@ -35,12 +35,12 @@ ref_af_value <- 0.05
 options(digits=3)
 ###Read in files for CNV annotation script
 cnv <- read.table("xhmmCNV.xcnv", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-intv <- read.table("hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed", sep = "\t", stringsAsFactors = FALSE)
+intv <- read.table(args[1], sep = "\t", stringsAsFactors = FALSE)
 colnames(intv) <- c("chr","start","stop","exon")
 aux <- read.table("xhmmCNV.aux_xcnv", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 #NONREF#
-ref.list <- read.table("BC1958_freqentCNVs_5pct.txt", sep = "\t", stringsAsFactors = FALSE)
-colnames(ref.list) <- c("EXON","CNV","AF_ref")
+#ref.list <- read.table("BC1958_freqentCNVs_5pct.txt", sep = "\t", stringsAsFactors = FALSE)
+#colnames(ref.list) <- c("EXON","CNV","AF_ref")
 
 
 
@@ -113,29 +113,30 @@ AF_all <- apply(x[11:ncol(x)],1, function(y) (sum(y == 1)/sum(y == 0)))
 x <- cbind(x[1:10],AF_all,x[11:ncol(x)])
 
 #FOR REF# data sets - generate list of exons from CNV at more than percent freq
-#freq.list <- x[,c("EXON","CNV","AF_all")]
-#write.table(freq.list, file = "BC1958_freqentCNVs_5pct.txt", sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
+freq.list <- x[,c("EXON","CNV","AF_all")]
+write.table(freq.list, file = "BC1958_freqentCNVs_5pct.txt", sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
 
 
 
 #NONREF#
 #adding REF_AF
-x <- merge(x, ref.list, by = c("EXON","CNV"), all.x = TRUE, fill = 0)
-x <- cbind(x[1:11],x[ncol(x)],x[13:ncol(x)-1])
+#x <- merge(x, ref.list, by = c("EXON","CNV"), all.x = TRUE, fill = 0)
+#x <- cbind(x[1:11],x[ncol(x)],x[13:ncol(x)-1])
 #remove commonly altered exons in BC1958 Cohort
-x <- x[x$AF_ref < ref_af_value,]
+#x <- x[x$AF_ref < ref_af_value,]
 
 #NONREF#
 ###all exons with AF more than 0.05 in analysis cohort - removed for now - causes loss of all rows and errors if no output is < value
-x <- x[x$AF_all < int_af_value,]
+#x <- x[x$AF_all < int_af_value,]
 
 ###string split Exon into gene and exon
 gene_exon <- as.data.frame(str_split(as.character(x$EXON), "_", simplify = TRUE),stringsAsFactors = FALSE)
 gene_exon <- gene_exon[-3]
 colnames(gene_exon) <- c("GENE","EXON")
-x <- x[-1]
+##this value index needs to be -1 in the non-ref script and -3 in the reference script
+x <- x[-3]
 x <- cbind(gene_exon,x[1:ncol(x)])
 
 write.table(x, file="cnv_xhmm_annotated.tsv", sep="\t", quote = FALSE, row.names = FALSE, col.names = TRUE, na = "-9")
 #NONREF#
-save.image(file="cnvANNO.RData")
+#save.image(file="cnvANNO.RData")
