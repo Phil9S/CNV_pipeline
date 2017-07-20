@@ -161,7 +161,7 @@ fi
 cp cnvPCA.R ${outputfolder}cnv_analysis/
 cp cnvANNO.R ${outputfolder}cnv_analysis/
 cp cnvPLOTS.R ${outputfolder}cnv_analysis/
-cp BC1958_freqentCNVs_5pct.txt ${outputfolder}cnv_analysis/
+cp BC1958_CNVs.txt ${outputfolder}cnv_analysis/
 cd ${outputfolder}cnv_analysis
 
 
@@ -184,7 +184,7 @@ fi
 mv cnvPCA.R xhmm_analysis_${timestamp}/temp
 mv cnvANNO.R xhmm_analysis_${timestamp}
 mv cnvPLOTS.R xhmm_analysis_${timestamp}
-mv BC1958_freqentCNVs_5pct.txt xhmm_analysis_${timestamp}
+mv BC1958_CNVs.txt xhmm_analysis_${timestamp}
 cd xhmm_analysis_${timestamp}/temp
 
 

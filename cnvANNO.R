@@ -35,11 +35,11 @@ ref_af_value <- 0.05
 options(digits=3)
 ###Read in files for CNV annotation script
 cnv <- read.table("xhmmCNV.xcnv", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-intv <- read.table("hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed", sep = "\t", stringsAsFactors = FALSE)
+intv <- read.table(args[1], sep = "\t", stringsAsFactors = FALSE)
 colnames(intv) <- c("chr","start","stop","exon")
 aux <- read.table("xhmmCNV.aux_xcnv", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 #NONREF#
-ref.list <- read.table("BC1958_freqentCNVs_5pct.txt", sep = "\t", stringsAsFactors = FALSE)
+ref.list <- read.table("BC1958_CNVs.txt", sep = "\t", stringsAsFactors = FALSE)
 colnames(ref.list) <- c("EXON","CNV","AF_ref")
 
 
@@ -79,6 +79,7 @@ x <- merge(x,t,by.y = c("CNV","EXON"), all.x = TRUE)
 ##adding genotype columns for each sample - spread function from dplyr - removal of factors to ease data handling
 
 x$GT <- 1
+x <- x[!duplicated(x),]
 x <- spread(x,SAMPLE,GT,fill=0)
 x %>% mutate_if(is.factor, as.character) -> x
 #na replaced as 0 in ref genotype field
@@ -121,6 +122,7 @@ x <- cbind(x[1:10],AF_all,x[11:ncol(x)])
 #NONREF#
 #adding REF_AF
 x <- merge(x, ref.list, by = c("EXON","CNV"), all.x = TRUE, fill = 0)
+x[is.na(x)] <- 0
 x <- cbind(x[1:11],x[ncol(x)],x[13:ncol(x)-1])
 #remove commonly altered exons in BC1958 Cohort
 x <- x[x$AF_ref < ref_af_value,]
