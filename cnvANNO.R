@@ -140,4 +140,5 @@ x <- cbind(gene_exon,x[1:ncol(x)])
 
 write.table(x, file="cnv_xhmm_annotated.tsv", sep="\t", quote = FALSE, row.names = FALSE, col.names = TRUE, na = "-9")
 #NONREF#
+rm(aux,cnv,f.aux,gene_exon,intv,ref.list,AF_all,args,int_af_value,ref_af_value)
 save.image(file="cnvANNO.RData")
