@@ -71,7 +71,7 @@ Core utilities:
 Examples:
 
 Running xhmm analysis on a folder containing bams & remove temp files:
-./CNV_analysis.sh -i /data/BAMS/ -o /data/CNV_REULTS/ -p /xhmm/files/params.txt -v /data/ref/nextera_exome_targets.bed -tr
+./CNV_analysis.sh -c RCC -i /data/BAMS/ -o /data/CNV_REULTS/ -p /xhmm/files/params.txt -v /data/ref/nextera_exome_targets.bed -tr
 		"			               
 		echo -e "\n"
 		exit
@@ -206,103 +206,103 @@ ls ${inputfolder}*.bam > bam_list_xhmm
 ###XHMM Analysis
 date
 echo -e "## XHMM ANALYSIS ## - Bam files split into 6 sets...(Stage 1 of 10)\n"
-split -a 1 --numeric-suffixes=1 --additional-suffix=.list -n l/6 bam_list_xhmm bam_chunk
+#split -a 1 --numeric-suffixes=1 --additional-suffix=.list -n l/6 bam_list_xhmm bam_chunk
 
 echo -e "## XHMM ANALYSIS ## - Performing depth of coverage...(Stage 2 of 10)\n"
 
-java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk1.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
--l INFO \
---omitDepthOutputAtEachBase \
---omitLocusTable \
---minBaseQuality 0 \
---minMappingQuality 20 \
---start 1 \
---stop 5000 \
---nBins 200 \
---includeRefNSites \
---countType COUNT_FRAGMENTS \
--o bam_chunkOUT1 > /dev/null 2>&1 &
-
-java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk2.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
--l INFO \
---omitDepthOutputAtEachBase \
---omitLocusTable \
---minBaseQuality 0 \
---minMappingQuality 20 \
---start 1 \
---stop 5000 \
---nBins 200 \
---includeRefNSites \
---countType COUNT_FRAGMENTS \
--o bam_chunkOUT2 > /dev/null 2>&1 &
-
-java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk3.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
--l INFO \
---omitDepthOutputAtEachBase \
---omitLocusTable \
---minBaseQuality 0 \
---minMappingQuality 20 \
---start 1 \
---stop 5000 \
---nBins 200 \
---includeRefNSites \
---countType COUNT_FRAGMENTS \
--o bam_chunkOUT3 &
-
-java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk4.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
--l INFO \
---omitDepthOutputAtEachBase \
---omitLocusTable \
---minBaseQuality 0 \
---minMappingQuality 20 \
---start 1 \
---stop 5000 \
---nBins 200 \
---includeRefNSites \
---countType COUNT_FRAGMENTS \
--o bam_chunkOUT4 > /dev/null 2>&1 &
-
-java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk5.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
--l INFO \
---omitDepthOutputAtEachBase \
---omitLocusTable \
---minBaseQuality 0 \
---minMappingQuality 20 \
---start 1 \
---stop 5000 \
---nBins 200 \
---includeRefNSites \
---countType COUNT_FRAGMENTS \
--o bam_chunkOUT5 > /dev/null 2>&1 &
-
-java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk6.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
--l INFO \
---omitDepthOutputAtEachBase \
---omitLocusTable \
---minBaseQuality 0 \
---minMappingQuality 20 \
---start 1 \
---stop 5000 \
---nBins 200 \
---includeRefNSites \
---countType COUNT_FRAGMENTS \
--o bam_chunkOUT6 > /dev/null 2>&1 &
-
-
+#java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk1.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+#-l INFO \
+#--omitDepthOutputAtEachBase \
+#--omitLocusTable \
+#--minBaseQuality 0 \
+#--minMappingQuality 20 \
+#--start 1 \
+#--stop 5000 \
+#--nBins 200 \
+#--includeRefNSites \
+#--countType COUNT_FRAGMENTS \
+#-o bam_chunkOUT1 > /dev/null 2>&1 &
+#
+#java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk2.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+#-l INFO \
+#--omitDepthOutputAtEachBase \
+#--omitLocusTable \
+#--minBaseQuality 0 \
+#--minMappingQuality 20 \
+#--start 1 \
+#--stop 5000 \
+#--nBins 200 \
+#--includeRefNSites \
+#--countType COUNT_FRAGMENTS \
+#-o bam_chunkOUT2 > /dev/null 2>&1 &
+#
+#java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk3.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+#-l INFO \
+#--omitDepthOutputAtEachBase \
+#--omitLocusTable \
+#--minBaseQuality 0 \
+#--minMappingQuality 20 \
+#--start 1 \
+#--stop 5000 \
+#--nBins 200 \
+#--includeRefNSites \
+#--countType COUNT_FRAGMENTS \
+#-o bam_chunkOUT3 &
+#
+#java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk4.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+#-l INFO \
+#--omitDepthOutputAtEachBase \
+#--omitLocusTable \
+#--minBaseQuality 0 \
+#--minMappingQuality 20 \
+#--start 1 \
+#--stop 5000 \
+#--nBins 200 \
+#--includeRefNSites \
+#--countType COUNT_FRAGMENTS \
+#-o bam_chunkOUT4 > /dev/null 2>&1 &
+#
+#java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk5.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+#-l INFO \
+#--omitDepthOutputAtEachBase \
+#--omitLocusTable \
+#--minBaseQuality 0 \
+#--minMappingQuality 20 \
+#--start 1 \
+#--stop 5000 \
+#--nBins 200 \
+#--includeRefNSites \
+#--countType COUNT_FRAGMENTS \
+#-o bam_chunkOUT5 > /dev/null 2>&1 &
+#
+#java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk6.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
+#-l INFO \
+#--omitDepthOutputAtEachBase \
+#--omitLocusTable \
+#--minBaseQuality 0 \
+#--minMappingQuality 20 \
+#--start 1 \
+#--stop 5000 \
+#--nBins 200 \
+#--includeRefNSites \
+#--countType COUNT_FRAGMENTS \
+#-o bam_chunkOUT6 > /dev/null 2>&1 &
+#
+#
 ###Allow for all child processes in parallel to complete
-wait
+#wait
 sleep 5
 
 echo -e "## XHMM ANALYSIS ## - Merging depth of coverage files & Calculating GC content...(Stage 3 of 10)\n"
 	
 ###Combines GATK Depth-of-Coverage outputs for multiple samples (at same loci):
-xhmm --mergeGATKdepths -o xhmmCNV.mergeDepths.txt \
---GATKdepths bam_chunkOUT1.sample_interval_summary \
---GATKdepths bam_chunkOUT2.sample_interval_summary \
---GATKdepths bam_chunkOUT3.sample_interval_summary \
---GATKdepths bam_chunkOUT4.sample_interval_summary \
---GATKdepths bam_chunkOUT5.sample_interval_summary \
---GATKdepths bam_chunkOUT6.sample_interval_summary > /dev/null 2>&1
+#xhmm --mergeGATKdepths -o xhmmCNV.mergeDepths.txt \
+#--GATKdepths bam_chunkOUT1.sample_interval_summary \
+#--GATKdepths bam_chunkOUT2.sample_interval_summary \
+#--GATKdepths bam_chunkOUT3.sample_interval_summary \
+#--GATKdepths bam_chunkOUT4.sample_interval_summary \
+#--GATKdepths bam_chunkOUT5.sample_interval_summary \
+#--GATKdepths bam_chunkOUT6.sample_interval_summary > /dev/null 2>&1
 
 ###calculates the GC Content of the exome intervals
 java -Xmx30g -jar ${gatk} -T GCContentByInterval -L ${interval} -R ${ref} -o DATA_GC_percent.txt > /dev/null 2>&1
