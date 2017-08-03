@@ -32,7 +32,7 @@ ggplot(scr, aes(x=PC, y=Eigen)) +
   scale_y_continuous(name="Eigen Value - Contributed Variance (%)", breaks = pretty(scr$Eigen, n = 10)) +
   scale_x_continuous(name="Princple Component", breaks = pretty(scr$PC, n = 10)) +
   ggtitle(label="PCA Scree Plot", subtitle="Cummulative Contributed Variance") +
-  geom_text(data=NULL, x=val+(val/100*20), y=nrow(scr)/2, label=">70% Contributed Variance", size=2) +
+  #geom_text(data=NULL, x=val+(val/100*20), y=nrow(scr)/2, label=">70% Contributed Variance", size=2) +
   theme(panel.border = element_blank(), axis.line = element_line(colour="black")) +
   theme_bw()
 dev.off()
