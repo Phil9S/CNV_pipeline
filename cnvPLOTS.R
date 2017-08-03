@@ -57,9 +57,9 @@ CNV_samp <- cbind(SAMPLES,CNV_samp)
 CNV_samp <- melt(CNV_samp,id.vars = "SAMPLES")
 ## Addition of an inx field consisting of the sample range for each line - used in facet_grid in the plot to 
 ## make labels for each child plot generated - basically just a series of nested seq.ints and reps
-CNV_samp$inx_split <- rep(paste(rep("Samples", times= 50),
-                                paste(rep(seq.int(1,1001,10), times=1, each=10)[1:(nrow(CNV_samp)/2)],rep(" ",times=50),
-                                rep("-", times=50),rep(" ",times=50),
+CNV_samp$inx_split <- rep(paste(rep("Samples", times= nrow(CNV_samp)/2),
+                                paste(rep(seq.int(1,1001,10), times=1, each=10)[1:(nrow(CNV_samp)/2)],rep(" ",times=nrow(CNV_samp)/2),
+                                rep("-", times=nrow(CNV_samp)/2),rep(" ",times=nrow(CNV_samp)/2),
                                 rep(seq.int(10,1000,10), times=2, each=10)[1:(nrow(CNV_samp)/2)],sep = "")), times=2)
 ## form factor from inx_split col so that facets are ordered
 CNV_samp$inx_split <- factor(CNV_samp$inx_split, levels = unique(CNV_samp$inx_split))
@@ -107,7 +107,7 @@ rm(total,p1,SAMPLES,total_mean,total_sd,ylim) ## remove used and redundant varia
 #### p2 ####
 chr_vals <- c(seq.int(1,22,1),"X","Y")
 sample_list <- colnames(x)[14:ncol(x)]
-#sample_list <- "BHAM-RCC-15524_S4"
+#sample_list <- "EGAR00001238443_1629_H05"
 ## add for loop for each sample 
 for(s in sample_list){
   ## factor levels acquired for each autosomal and sex chromosome 
@@ -160,8 +160,8 @@ for(s in sample_list){
     ## coersion of X to 23 in miss_x causes NA chr values downstream
     miss_x$chr[miss_x$chr == 23] <- "X"
     miss_x$chr[miss_x$chr == 24] <- "Y"
-    miss_x$value[is.na(miss_x$value) & miss_x$cnv == "DUP"] <- 1    # add in values cooresponding to cnv type
-    miss_x$value[is.na(miss_x$value) & miss_x$cnv == "DEL"] <- -1   # add in values cooresponding to cnv type
+    miss_x$value[is.na(miss_x$value) & miss_x$cnv == "DUP"] <- 0    # add in values cooresponding to cnv type
+    miss_x$value[is.na(miss_x$value) & miss_x$cnv == "DEL"] <- 0   # add in values cooresponding to cnv type
     miss_x <- data.frame(chr=factor(miss_x$chr, levels = chr_vals),
                        pos=as.numeric(miss_x$pos),
                        cnv=as.character(miss_x$cnv),
@@ -228,7 +228,7 @@ for(s in sample_list){
   min_max <- y %>% group_by(chr) %>% summarise(min = min(int), max = max(int))
   ## Generate the mean int value for each chr to align the x axis label with
   label_chr <- y %>% group_by(chr) %>% summarise(int=round(mean(int)))
-  
+  l <- y
   ## Seperate the dip values from actual calls to allow for seperate aes customisation
   ## Seperate the spacer values from actual calls to plot seperately
   miss_x <- y[grepl(pattern = " Kb",x = y$gene) | grepl(pattern = " Mb",x = y$gene),]
@@ -236,42 +236,63 @@ for(s in sample_list){
   y <- y[!grepl(pattern = " Mb",x = y$gene),]
   y <- y[!grepl(pattern = " Kb",x = y$gene),]
   y <- y[!grepl(pattern = "#spacer#",x = y$gene),]
-  ## Generate mid points of each gene region/diploid region to anchor labels to
+  ## Generate mid points of each gene region to anchor labels to
   label_y <- y %>% group_by(chr,gene) %>% summarise(int=round(mean(int)))
+  ## drop labels for chr where the number of calls exceeds a value - default 20
+  label_y_fil <- as.data.frame(label_y %>% group_by(chr) %>% summarise(sum=sum(length(gene))))
+  label_y_fil <- as.vector(label_y_fil$chr[label_y_fil$sum > 30])
+  if(length(label_y_fil) != 0){
+    label_y <- label_y[!label_y$chr %in% label_y_fil,]
+  }
+  ## Generate mid points of each diploid region to anchor labels to
   label_miss_x <- miss_x %>% group_by(chr,gene) %>% summarise(int=round(mean(int)))
+  ## drop labels for chr where the number of calls exceeds a value - default 20
+  label_miss_x_fil <- as.data.frame(label_miss_x %>% group_by(chr) %>% summarise(sum=sum(length(gene))))
+  label_miss_x_fil <- as.vector(label_miss_x_fil$chr[label_miss_x_fil$sum > 30])
+  if(length(label_miss_x_fil) != 0){
+  label_miss_x <- label_miss_x[!label_miss_x$chr %in% label_miss_x_fil,]
+  }
   
+  ## generate vector of colours for alternating chr geom_rects - same length as possible number of chr
   min_max_col <- rep_len(c("gray10","gray70"),length.out = 24)
   
   p2 <- ggplot() +
     ## addition of rect alternation on chr
-    geom_rect(data = min_max, aes(xmin= min, xmax= max, ymin= -Inf, ymax= Inf, fill=chr)) +
+    #geom_rect(data = min_max, aes(xmin= min, xmax= max, ymin= -Inf, ymax= Inf, fill=chr)) +
     ## plotting h-lines for del and dups
-    geom_hline(yintercept = 1, colour = "darkgreen") +
-    geom_hline(yintercept = -1, colour = "darkred") +
+    geom_hline(yintercept = 1, colour = "darkgreen", linetype = "dotted", alpha = 0.3) +
+    geom_hline(yintercept = 0, colour = "black",linetype = "dashed", alpha = 0.6) +
+    geom_hline(yintercept = -1, colour = "darkred",linetype = "dotted", alpha = 0.3) +
     
-    #geom_line(data=l, aes(int,value)) +
+    geom_line(data=l, aes(int,value)) +
     
     geom_point(data=miss_x, aes(int,value),colour = 'transparent') +
-    geom_label_repel(data=subset(miss_x, miss_x$int %in% label_miss_x$int), aes(int,value,label = gene),nudge_y = -0.25) +
-    ## adding point data for values in y & adding gene labels
+    geom_label_repel(data=subset(miss_x, miss_x$int %in% label_miss_x$int), 
+                     aes(int,value,label = gene), size = 5, label.padding = unit(0.15,"lines"), nudge_y = -0.15) +
+    ## adding point data for values in y & adding gene labels - nudge depending on type of CNV
     geom_point(data=y, aes(int,value,colour=gene)) +
-    geom_label_repel(data=subset(y, y$int %in% label_y$int), aes(int,value,label = gene,colour=gene),nudge_y = 0.25) +
+    geom_label_repel(data=subset(y, y$int %in% label_y$int & y$cnv == "DEL"), label.padding = unit(0.15,"lines"),
+                     aes(int,value,label = gene,colour=gene),nudge_y = -0.5, size = 5) +
+    geom_label_repel(data=subset(y, y$int %in% label_y$int & y$cnv == "DUP"), label.padding = unit(0.15,"lines"),
+                     aes(int,value,label = gene,colour=gene),nudge_y = 0.5, size = 5) +
     
     labs(list(title= paste("Genomic Distribution of CNVs for sample",s,sep=" "),
               caption = "Diploid Chromosomes not shown - not scaled accurately - spacer regions < 1000bp ignored")) +
     
-    scale_y_continuous(breaks = c(-1,1),labels = c("DEL","DUP"),limits = c(-1.5,1.5),minor_breaks=NULL) +
+    scale_y_continuous(breaks = c(-1,1),labels = c("DEL","DUP"),limits = c(-2,2),minor_breaks=NULL) +
     scale_x_continuous(expand = c(0,0),breaks = label_chr$int, labels = label_chr$chr) +
     scale_fill_manual(values = alpha(min_max_col,.1)) +
     
-    theme(axis.text.x = element_text(size = 12), axis.text.y = element_text(size = 12),axis.title = element_blank()) +
+    theme(axis.text.x = element_blank(), axis.text.y = element_text(size = 12),axis.title = element_blank()) +
     theme(plot.caption = element_text(size = 11, colour = "gray10", face = "italic")) +
     theme(legend.position="none", panel.background = element_blank(), axis.ticks.x = element_blank()) +
     theme(axis.line = element_line(colour = "gray10"), panel.grid = element_blank())
-  ## Plotting graph to .png file
-  png(file = paste("cnv_calls_",s,".png"), width = 16, height = 6, units = "in", res = 300)
+  p2 <- p2 + facet_wrap(~chr, scales = "free_x",ncol = 1)
+            
+  ## Plotting graph to .png file - scale png length with number of chromosomes so each are evenly sized
+  png(file = paste("cnv_calls_",s,".png"), width = 15, height = length(unique(y$chr))*3, units = "in", res = 300)
   print(p2)
   dev.off()
   
-  rm(chr_max,chr_min,label_chr,label_miss_x,label_y,min_max,y,min_max_col,p2)
+  rm(chr_max,chr_min,label_chr,label_miss_x,label_y,min_max,y,min_max_col,p2,label_y_fil)
 }
