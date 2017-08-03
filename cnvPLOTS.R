@@ -107,7 +107,7 @@ rm(total,p1,SAMPLES,total_mean,total_sd,ylim) ## remove used and redundant varia
 #### p2 ####
 chr_vals <- c(seq.int(1,22,1),"X","Y")
 sample_list <- colnames(x)[14:ncol(x)]
-#sample_list <- "EGAR00001238443_1629_H05"
+sample_list <- "EGAR00001238443_1629_H05"
 ## add for loop for each sample 
 for(s in sample_list){
   ## factor levels acquired for each autosomal and sex chromosome 
@@ -279,15 +279,17 @@ for(s in sample_list){
     labs(list(title= paste("Genomic Distribution of CNVs for sample",s,sep=" "),
               caption = "Diploid Chromosomes not shown - not scaled accurately - spacer regions < 1000bp ignored")) +
     
-    scale_y_continuous(breaks = c(-1,1),labels = c("DEL","DUP"),limits = c(-2,2),minor_breaks=NULL) +
+    scale_y_continuous(breaks = c(-1,1),labels = c("LOSS","GAIN"),limits = c(-2,2),minor_breaks=NULL) +
     scale_x_continuous(expand = c(0,0),breaks = label_chr$int, labels = label_chr$chr) +
     scale_fill_manual(values = alpha(min_max_col,.1)) +
     
     theme(axis.text.x = element_blank(), axis.text.y = element_text(size = 12),axis.title = element_blank()) +
     theme(plot.caption = element_text(size = 11, colour = "gray10", face = "italic")) +
+    theme(plot.title = element_text(size = 18, face = "bold", hjust = 0)) +
     theme(legend.position="none", panel.background = element_blank(), axis.ticks.x = element_blank()) +
     theme(axis.line = element_line(colour = "gray10"), panel.grid = element_blank())
-  p2 <- p2 + facet_wrap(~chr, scales = "free_x",ncol = 1)
+  p2 <- p2 + facet_wrap(~chr, scales = "free_x",ncol = 1, labeller = label_both) +
+             theme(strip.text = element_text(face = "bold", size = 16, hjust = 0.01))
             
   ## Plotting graph to .png file - scale png length with number of chromosomes so each are evenly sized
   png(file = paste("cnv_calls_",s,".png"), width = 15, height = length(unique(y$chr))*3, units = "in", res = 300)
