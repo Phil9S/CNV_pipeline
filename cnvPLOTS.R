@@ -67,7 +67,7 @@ CNV_samp$inx_split <- factor(CNV_samp$inx_split, levels = unique(CNV_samp$inx_sp
 total <- CNV_samp %>% group_by(SAMPLES) %>% summarise(sum(value))
 total_sd <- sd(total$`sum(value)`) ## sdev calc
 total_mean <- mean(total$`sum(value)`) ## mean calc
-ylim <- round(max(total$`sum(value)`),digits = -1) ## ylim maximum calc
+ylim <- max(ceiling(total$`sum(value)`/10)*10) ## ylim maximum calc
 
 ##ggplot line to generate the graph
 p1 <- ggplot(CNV_samp, aes(SAMPLES,value, fill=variable)) + geom_col(colour = c("gray12")) + ## the actual data being plotted
@@ -107,7 +107,7 @@ rm(total,p1,SAMPLES,total_mean,total_sd,ylim) ## remove used and redundant varia
 #### p2 ####
 chr_vals <- c(seq.int(1,22,1),"X","Y")
 sample_list <- colnames(x)[14:ncol(x)]
-sample_list <- "EGAR00001238443_1629_H05"
+
 ## add for loop for each sample 
 for(s in sample_list){
   ## factor levels acquired for each autosomal and sex chromosome 
