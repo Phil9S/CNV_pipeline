@@ -49,8 +49,7 @@ ARGUMENT			TYPE				DESCRIPTION
 
 -p --params (xhmm only)		file				Path for the params.txt file specifically requ-
 								-ired for the xhmm analysis. Default params.txt
-								file is included in the xhmm download. Only re-
-								-quired if xhmm is being run.
+								file is included in the xhmm download. 
 
 -v --interval			file				Interval file provided by illumina, typically a
 								file named Nextera_Exome_hg38, in tsv bed format,
