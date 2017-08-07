@@ -55,11 +55,17 @@ ARGUMENT			TYPE				DESCRIPTION
 								file named Nextera_Exome_hg38, in tsv bed format,
 								BED4 without header.
 
+Mode Tags:
 -tr --temp-remove		argument			Providing the option -tr or --temp-remove, given 
 								without a proceeding file/folder/string results 
 								in the DELETION of all temporary files generated
 								during the CNV analysis, inlcuding Depth of cov-
 								erage.
+								
+-call --call-only		argument			Providing this option allows the pipeline to run
+								without performing the depth of coverage analysis
+								This is particularly useful for re-calling data
+								with new parameters or cutoffs
 
 Optional Arguments:
 
