@@ -1,6 +1,6 @@
 #!/bin/bash
 date
-## CNV Pipeline - Version Black Gold Radian
+## CNV Pipeline
 ##Programme and reference files
 gatk="/data/Resources/Software/Javas/GenomeAnalysisTK.jar"
 ref="/analysis/mtgroup_share/resources/gatk_bundle/b37/decompressed/human_g1k_v37.fasta"
