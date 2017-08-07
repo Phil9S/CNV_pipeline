@@ -30,9 +30,6 @@ for arg in "$@"; do
 
 Script for running xhmm CNV algorithms on a set of bam files
 
-GATK and Reference genome files are internally specifed for Whisperwind (Server)
-Please set these to alternate values by editing the script
-
 Required arguments:
 
 ARUGMENT			TYPE				DESCRIPTION
