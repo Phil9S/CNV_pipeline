@@ -1,3 +1,4 @@
+##CNV Pipeline - Black Gold Radian
 rm(list = ls())
 args = commandArgs(trailingOnly=TRUE)
 require(methods)

@@ -1,3 +1,4 @@
+## CNV Pipeline - Black Gold Radian
 #### Input and environment setup ####
 rm(list = ls())
 ## load data from cnvANNO.R script

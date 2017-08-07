@@ -1,9 +1,11 @@
 #!/bin/bash
 date
+## CNV Pipeline - Version Black Gold Radian
 ##Programme and reference files
 gatk="/data/Resources/Software/Javas/GenomeAnalysisTK.jar"
 ref="/analysis/mtgroup_share/resources/gatk_bundle/b37/decompressed/human_g1k_v37.fasta"
 ##Command-line variables
+version="Black Gold Radian"
 inputfolder="NULL"
 int="NULL"
 params="NULL"
@@ -26,7 +28,7 @@ call="FALSE"
 for arg in "$@"; do
 	if [[ "$arg" == "-h" ]] || [[ "$arg" == "--help" ]]; then
 		echo -e "
-## CNV analysis ## - HELP Documentation - v2.0 - Buridan (XHMM ONLY) ##
+## CNV analysis ## - HELP Documentation - v.${version} ##
 
 Script for running xhmm CNV algorithms on a set of bam files
 
@@ -375,6 +377,7 @@ cd xhmm_analysis_${cohort}/temp
 
 ##Variable reporting
 echo -e "## CNV Pipeline ## Argument summary:"
+echo -2 "## CNV Pipeline ## Version ${version}"
 echo -e "## CNV Pipeline ## Genome analysis TK jar file - ${gatk}" | tee -a cnv.log
 echo -e "## CNV Pipeline ## Reference fasta file - ${ref}" | tee -a cnv.log
 echo -e "## CNV Pipeline ## Input folder - ${inputfolder}" | tee -a cnv.log
