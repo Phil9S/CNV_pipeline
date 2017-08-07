@@ -34,7 +34,7 @@ Script for running xhmm CNV algorithms on a set of bam files
 
 Required arguments:
 
-ARUGMENT			TYPE				DESCRIPTION
+ARGUMENT			TYPE				DESCRIPTION
 
 -i --input			folder				A directory path containing the .bam files to
 								be used in the CNV analysis. Must end in .bam
