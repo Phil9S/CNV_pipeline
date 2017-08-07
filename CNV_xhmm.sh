@@ -49,18 +49,18 @@ ARGUMENT			TYPE				DESCRIPTION
 
 -p --params (xhmm only)		file				Path for the params.txt file specifically requ-
 								-ired for the xhmm analysis. Default params.txt
-								file is included in the xhmm download. 
+								file is included in the xhmm download
 
 -v --interval			file				Interval file provided by illumina, typically a
 								file named Nextera_Exome_hg38, in tsv bed format,
-								BED4 without header.
+								BED4 without header
 
 Mode Tags:
 -tr --temp-remove		argument			Providing the option -tr or --temp-remove, given 
 								without a proceeding file/folder/string results 
 								in the DELETION of all temporary files generated
 								during the CNV analysis, inlcuding Depth of cov-
-								erage.
+								erage
 								
 -call --call-only		argument			Providing this option allows the pipeline to run
 								without performing the depth of coverage analysis
@@ -72,12 +72,12 @@ Optional Arguments:
 ARGUMENT			TYPE				DESCRIPTION
 
 -gatk --gatk			file				Location of the GenomeAnalysisTK.jar file used f-
-								-or depth of coverage analysis - Default 
+								-or depth of coverage analysis 
 
 -r --ref			file				Reference fasta for the genome used in the analy-
 								-sis. Reference must match contigs used in bed fi-
 								-le provided - GATK will error if reference does
-								not match the bed. Default reference provided is
+								not match the bed
 															
 -minTS --minTS			integer				Set minimum allowed target size for target filter-
 								ing in xhmm --matrix step. Higher values are more
