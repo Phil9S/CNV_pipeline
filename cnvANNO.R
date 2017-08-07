@@ -10,10 +10,7 @@ if(!require(stringr)){
   install.packages("stringr", repos = "https://mirrors.ebi.ac.uk/CRAN/")
   library(stringr)
 }
-if(!require(cowplot)){
-  install.packages("cowplot", repos= "https://mirrors.ebi.ac.uk/CRAN/")
-  library(cowplot)
-}
+
 if(!require(tidyr)){
   install.packages("tidyr", repos= "https://mirrors.ebi.ac.uk/CRAN/")
   library(tidyr)

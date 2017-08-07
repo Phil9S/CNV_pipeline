@@ -1,8 +1,0 @@
-NOTES:
-
-Settings under the command 
-
-xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 10 --maxTargetSize 10000 --minMeanTargetRD 20 --maxMeanTargetRD 500 --minMeanSampleRD 24 --maxMeanSampleRD 60 --maxSdSampleRD 150
-
-should be ammended on the basis of cohort being analysed - add command line options?
-Particularly for sample / target is less important? Sample RD extremes within 3 SD of mean
