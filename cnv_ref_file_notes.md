@@ -1,4 +1,4 @@
-# Generation of BED4 file for CNV analysis & frequency lists from reference datasets
+# Generation of BED4 files & frequency lists from reference datasets
 
 ## Exon Interval file 
 The interval file (specified by -v --interval) is a required file for the CNV Pipeline to run but is likely to be the cause of most common errors, run failures, and/or annotation failures. This file attempts to document how the interval file was generated and how a reference set of frequently altered genes/exons was created
@@ -40,6 +40,8 @@ sort -k1,1 -k2,2n lowcomplex_simpreps.hg38.bed > lowcomplex_simpreps.sorted.hg38
 ```
 #### generating list of overlapping intervals 
 Filtering out intervals with any amount of repeat-mask overlap would be overly stringent so only exome intervals harbouring an overlap of 25% or more are excluded - In line with the steps performed [here](http://www.nature.com/ng/journal/v48/n10/full/ng.3638.html)
+
+[Bedtools](http://bedtools.readthedocs.io/en/latest/) provides an excellent tool set for easily comparing sets of genomic intervals for overlap and/or intersections - the command below compares the exome interval set to the repeat-masked interval set generating a list of exons that are overlapped by repeat-masked regions by > 25%:
 ```sh
 bedtools intersect -wb -F 0.25 /
 		   -a hg38_exons_Ensembl87.autoXY.sorted.bed /
@@ -47,16 +49,21 @@ bedtools intersect -wb -F 0.25 /
 vim -c '%s/\S\+\t\S\+\t\S\+\t\(\S\+\)\t\S\+\t\S\+\t\S\+\t\S\+/\1/' exon_repmask_overlap.txt
 sort -u exon_repmask_overlap.txt > exon_repmask_overlap.uniq.txt
 ```
+This list is then loaded into R with the exome interval BED file and non-matching exons are retained:
 ```R
 t <- read.table("hg38_exons_Ensembl87.autoXY.sorted.bed", sep="\t")
 l <- read.table("exon_repmask_overlap.uniq.txt")
 t1 <- t[!t$V4 %in% l$V1,]
 write.table(t1, "hg38_exons_Ensembl87.masked.autoXY.sorted.bed", sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)
 ```
-#### Removing duplicated exons and retaining exons of multiple transcripts with longest length 
-###### **THIS STEP TAKES SOME TIME! SCALE OF 12+ HOURS NOT MINUTES!**
-###### **This will retain duplicate exons of the same size - differing start and stop positions are present for a majority of these** 
+#### Removal of duplicated exons 
+###### NOTE: THIS STEP TAKES SOME TIME! SCALE OF 12+ HOURS NOT MINUTES!
+###### _This will retain duplicate exons of the same size - differing start and stop positions are present for a majority of these_
+###### _This step is optional - Downstream scripts have built-in error catching to deal with duplications_
 
+Due to multiple transcripts, it is highly likely that many exons in the interval file will have been duplicated, all be with slightly differing start and stop positions. Instead of systematically identifying the canonical transcript for each gene, the most simple solution is to select the largest exon, to encompass the most genomic space
+
+The following R script reads in the interval file and retains the gene_exon line with the largest size, rejecting all other duplicates (It will retain duplicates where both the start and stop positions differ entirely, as these are likely unique exons for a specific transcript):
 ```R
 dat <- read.table("hg38_exons_Ensembl87.masked.autoXY.sorted.bed", sep = "\t")
 dat$V5 <- dat[,3] - dat[,2]
@@ -74,8 +81,11 @@ for(i in exons){
 tab <- tab[,-5]
 write.table(tab, "hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.bed", sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)
 ```
+_This is a long process but dramatically reduces the number of targets, resulting in a substantial downstream decrease in processing time at all stages_
 
 #### Adding padding to exon regions - 2bp upstream of start and 2bp downstream of end
+The final processing step is to add a number of padding bases to the intervals. This is intended to increase the fidelity of calls over target sets by incorporating more reads that align to the edges of target regions. Using R, code below adds a padding of 2bp to both the start and stop position of each exon present in the interval file:
+
 ```R
 t <- read.table("hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.bed", sep="\t")
 n <- t
@@ -83,13 +93,15 @@ n$V2 <- n$V2 - 2
 n$V3 <- n$V3 + 2
 write.table(n, "hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed", sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
 ```
+The subsequent file is then sorted and moved to have the desired name via the commandline:
 ```sh
 sort -k1,1 -k2,2n hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed > hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bedsort
 mv hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bedsort hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed
 ```
-Interval file for CNV analysis -> hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed (8,875Kb)
 
 ##### Removal summary:
+Final interval file for CNV analysis: hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed (8,875Kb)
+
 |File|Size|Change|Process|
 |----|----|------|-------|
 |hg38_exons_Ensembl87.sorted.txt| 1,285,529 targets | Original file |
@@ -98,11 +110,50 @@ hg38_exons_Ensembl87.masked.autoXY.sorted.bed| 969,614 targets| -212,257 | Remov
 hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed| 259,691| -709,923 | Removal of multiple transcripts and duplicated rows|
 
 ## BC1958 Reference for frequently altered exons
-file was generated after initial runnig of the CNV pipeline of the 1958BC cohort
-Exons were selected from the output results from xhmm which occured at a frequency greater than 5%
-across all 1000 samples
-R (in cnvANNO - commented out):
+The analysis provides frequencies for the occurance of exon alterations both internally (on the analysis cohort) & externally (currently the ICR1958 birth control cohort) to allow for both filtering and comparison of 'allelic'frequencies in the analysis
+
+With some minor alterations to the scripts, a new freq_list can be generated on any reference dataset provided - This section will attempt to detail some of those steps
+
+#### Generating unfiltered CNV data
+In order to create a list of frequently altered genes/exons from a  reference dataset, the CNV analysis Pipeline should be run in its entirety with minor ammendments to the script `cnvANNO.R`
+
+**_Follow the instructions for data generation outlined in both the `README.md` and the previous section of this document until you have generated a complete data set_**
+
+Once that is complete, move into the folder containing the final analysis results (this should include the `cnv_xhmm_annotated.tsv` file and the `cnvANNO.RData` for your reference dataset
+
+By editing the cnvANNO.R script which was copied to the working directory, it is possible to generate a new reference gene/exon frequency list through commenting and uncommenting lines. It is also possible to re-run the annotation with differing parameters.
+
+##### Comment out the following lines:
+###### Lines 42-43
 ```R
-freq.list <- as.vector(unique(x$EXON[x$AF_all > 0.05]))
-write.table(freq.list, file = "BC1958_freqentCNVs_5pct.txt", col.names = FALSE, row.names = FALSE, quote = FALSE)
+ref.list <- read.table("BC1958_CNVs.txt", sep = "\t", stringsAsFactors = FALSE)
+colnames(ref.list) <- c("EXON","CNV","AF_ref")
 ```
+###### Lines 124-128
+```R
+x <- merge(x, ref.list, by = c("EXON","CNV"), all.x = TRUE, fill = 0)
+x[is.na(x)] <- 0
+x <- cbind(x[1:11],x[ncol(x)],x[13:ncol(x)-1])
+#remove commonly altered exons in BC1958 Cohort
+x <- x[x$AF_ref < ref_af_value,]
+```
+###### Line 132
+```R
+x <- x[x$AF_all < int_af_value,]
+```
+###### Lines 147-148
+```R
+rm(aux,cnv,f.aux,gene_exon,intv,ref.list,AF_all,args,int_af_value,ref_af_value)
+save.image(file="cnvANNO.RData")
+```
+##### Remove comments from the following lines:
+###### Lines 117-118
+```R
+#freq.list <- x[,c("EXON","CNV","AF_all")]
+#write.table(freq.list, file = "frequentCNVs_ref.txt", sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
+```
+Save this modified `cnvANNO.R` script and run it again using the command below with the file path for the interval file used in the analysis:
+```sh
+Rscript ./cnvANNO.R /data/my_exome_intervals.bed
+
+Once this is complete a new file, in this case `frequentCNVs_ref.txt`, is generated. Copying this file into the git folder will replace the existing reference file with one matching your reference dataset of choice
