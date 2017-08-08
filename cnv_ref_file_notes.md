@@ -155,5 +155,5 @@ save.image(file="cnvANNO.RData")
 Save this modified `cnvANNO.R` script and run it again using the command below with the file path for the interval file used in the analysis:
 ```sh
 Rscript ./cnvANNO.R /data/my_exome_intervals.bed
-
+```
 Once this is complete a new file, in this case `frequentCNVs_ref.txt`, is generated. Copying this file into the git folder will replace the existing reference file with one matching your reference dataset of choice
