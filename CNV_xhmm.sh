@@ -354,7 +354,7 @@ fi
 cp cnvPCA.R ${outputfolder}cnv_analysis/
 cp cnvANNO.R ${outputfolder}cnv_analysis/
 cp cnvPLOTS.R ${outputfolder}cnv_analysis/
-cp BC1958_CNVs.txt ${outputfolder}cnv_analysis/
+cp ref_CNVs.txt ${outputfolder}cnv_analysis/
 cd ${outputfolder}cnv_analysis
 
 
@@ -377,7 +377,7 @@ fi
 mv cnvPCA.R xhmm_analysis_${cohort}/temp
 mv cnvANNO.R xhmm_analysis_${cohort}
 mv cnvPLOTS.R xhmm_analysis_${cohort}
-mv BC1958_CNVs.txt xhmm_analysis_${cohort}
+mv ref_CNVs.txt xhmm_analysis_${cohort}
 cd xhmm_analysis_${cohort}/temp
 
 ##Variable reporting

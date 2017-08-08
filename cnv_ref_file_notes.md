@@ -150,10 +150,10 @@ save.image(file="cnvANNO.RData")
 ###### Lines 117-118
 ```R
 #freq.list <- x[,c("EXON","CNV","AF_all")]
-#write.table(freq.list, file = "frequentCNVs_ref.txt", sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
+#write.table(freq.list, file = "ref_CNVs.txt", sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
 ```
 Save this modified `cnvANNO.R` script and run it again using the command below with the file path for the interval file used in the analysis:
 ```sh
 Rscript ./cnvANNO.R /data/my_exome_intervals.bed
 ```
-Once this is complete a new file, in this case `frequentCNVs_ref.txt`, is generated. Copying this file into the git folder will replace the existing reference file with one matching your reference dataset of choice
+Once this is complete a new file, in this case `ref_CNVs.txt`, is generated. Copying this file into the git folder will replace the existing reference file with one matching your reference dataset of choice

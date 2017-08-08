@@ -37,7 +37,7 @@ intv <- read.table(args[1], sep = "\t", stringsAsFactors = FALSE)
 colnames(intv) <- c("chr","start","stop","exon")
 aux <- read.table("xhmmCNV.aux_xcnv", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 #NONREF#
-ref.list <- read.table("BC1958_CNVs.txt", sep = "\t", stringsAsFactors = FALSE)
+ref.list <- read.table("ref_CNVs.txt", sep = "\t", stringsAsFactors = FALSE)
 colnames(ref.list) <- c("EXON","CNV","AF_ref")
 
 
@@ -113,7 +113,7 @@ x <- cbind(x[1:10],AF_all,x[11:ncol(x)])
 
 #FOR REF# data sets - generate list of exons from CNV at more than percent freq
 #freq.list <- x[,c("EXON","CNV","AF_all")]
-#write.table(freq.list, file = "BC1958_freqentCNVs_5pct.txt", sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
+#write.table(freq.list, file = "ref_CNVs.txt", sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
 
 
 
@@ -122,7 +122,7 @@ x <- cbind(x[1:10],AF_all,x[11:ncol(x)])
 x <- merge(x, ref.list, by = c("EXON","CNV"), all.x = TRUE, fill = 0)
 x[is.na(x)] <- 0
 x <- cbind(x[1:11],x[ncol(x)],x[13:ncol(x)-1])
-#remove commonly altered exons in BC1958 Cohort
+#remove commonly altered exons in ref Cohort
 x <- x[x$AF_ref < ref_af_value,]
 
 #NONREF#
