@@ -71,6 +71,37 @@ Currently only tested and implemented on **Whisperwind**  _without modification_
 |                                                          | [reshape2](https://www.rdocumentation.org/packages/reshape2/versions/1.4.2) |                            |
 
 ---
+## Bed file format
+###### Generating and using the right bed format is the area in which a majority of issues will occur
+###### Bed files should contain contig_ids that match to that of your reference genome and be for the same build
+_e.g. Using a GRCh38p6 bed file for data aligned to a GRCh38p6 reference genome_
+
+[BED4](https://genome.ucsc.edu/FAQ/FAQformat#format1) should be used as information provided in the 4th column can be used for the annotation features provided that they are formatted correctly
+#### Correct formatting:
+- No header
+- Only numeric or chr* contigs provided (depending on reference file)
+- Information on gene & exon number provided with "**_**" as a delimeter
+
+|          |     |    |          |
+|----------|-----|----|----------| 
+|chr1      |12345|6789|gene_exon1|
+|1         |12345|6789|gene_exon1|
+
+#### Incorrect formatting:
+- Inclusion of a header
+- Incorrect contif specification not matching reference
+- No seperate column for start and stop
+- Info field delimited incorrectly
+
+|`chromosome`|`start`|`stop`|`info`      |
+|-----------|-----|----|----------|
+|`chromosome1`|12345|6789|`gene-exon1`|
+|`alt chr 3`  |`12345-2456`|`gene exon1`|
+
+
+For information regarding the generation of a BED file for this script, see [this document](https://github.com/Phil9S/CNV_pipeline/blob/master/cnv_ref_file_notes.txt)
+
+---
 ## Examples:
 ##### General syntax - Run from the git directory
 `./CNV_analysis.sh [Required arguments] [optional arguments] [Mode tags]`
