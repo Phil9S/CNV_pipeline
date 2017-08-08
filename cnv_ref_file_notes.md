@@ -126,7 +126,7 @@ By editing the cnvANNO.R script which was copied to the working directory, it is
 ##### Comment out the following lines:
 ###### Lines 42-43
 ```R
-ref.list <- read.table("BC1958_CNVs.txt", sep = "\t", stringsAsFactors = FALSE)
+ref.list <- read.table("ref_CNVs.txt", sep = "\t", stringsAsFactors = FALSE)
 colnames(ref.list) <- c("EXON","CNV","AF_ref")
 ```
 ###### Lines 124-128
