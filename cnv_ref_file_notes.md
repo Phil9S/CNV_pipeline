@@ -110,7 +110,7 @@ hg38_exons_Ensembl87.masked.autoXY.sorted.bed| 969,614 targets| -212,257 | Remov
 hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed| 259,691| -709,923 | Removal of multiple transcripts and duplicated rows|
 
 ## Reference for frequently altered exons
-The analysis provides frequencies for the occurance of exon alterations both internally (on the analysis cohort) & externally (currently the ICR1958 birth control cohort) to allow for both filtering and comparison of 'allelic'frequencies in the analysis
+The analysis provides frequencies for the occurance of exon alterations both internally (on the analysis cohort) & externally (currently the ICR1958 birth control cohort) to allow for both filtering and comparison of 'allelic' frequencies in the analysis
 
 With some minor alterations to the scripts, a new freq_list can be generated on any reference dataset provided - This section will attempt to detail some of those steps
 
