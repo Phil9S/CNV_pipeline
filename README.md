@@ -1,4 +1,4 @@
-# CNV Pipeline (Black Gold Radian)
+# CNV Pipeline (version _Black Gold Radian_)
 ###### Script for running xhmm CNV algorithms on a set of bam files using xhmm - [Fromer et al. 2014](http://onlinelibrary.wiley.com/doi/10.1002/0471142905.hg0723s81/abstract;jsessionid=FDFFC8DB52043AE0D6DDE0DEEF2C9F9B.f03t02)
 ###### _NB: This will only work on Whisperwind (Dept of Medical Genetics) and will require major revisions on other machines_
 
@@ -99,7 +99,7 @@ _e.g. Using a GRCh38p6 bed file for data aligned to a GRCh38p6 reference genome_
 |`alt chr 3`  |`12345-2456`|`gene exon1`|
 
 
-For information regarding the generation of a BED file for this script, see [this document](https://github.com/Phil9S/CNV_pipeline/blob/master/cnv_ref_file_notes.txt)
+For information regarding the generation of a BED file for this script, see [this document](https://github.com/Phil9S/CNV_pipeline/blob/master/cnv_ref_file_notes.md)
 
 ---
 ## Examples:
