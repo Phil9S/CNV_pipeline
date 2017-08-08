@@ -73,8 +73,8 @@ Currently only tested and implemented on **Whisperwind**  _without modification_
 
 ---
 ## Bed file format
-###### Generating and using the right bed format is the area in which a majority of issues will occur
-###### Bed files should contain contig_ids that match to that of your reference genome and be for the same build
+Generating and using the right bed format is the area in which a majority of issues will occur. Bed files should contain contig_ids that match to that of your reference genome and be for the same build
+
 _e.g. Using a GRCh38p6 bed file for data aligned to a GRCh38p6 reference genome_
 
 [BED4](https://genome.ucsc.edu/FAQ/FAQformat#format1) should be used as information provided in the 4th column can be used for the annotation features provided that they are formatted correctly
