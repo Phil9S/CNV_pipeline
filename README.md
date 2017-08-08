@@ -5,7 +5,7 @@
 ##### Quick Start:
 In order to run a basic analysis with the default arguments run the code below with modified variables for the data of interest:
 
-###### _Check that all dependecies are installed then:_
+###### _Check that all [dependecies](https://github.com/Phil9S/CNV_pipeline#dependencies) are installed then:_
 ######  _clone the git_
 ```
 git clone https://github.com/Phil9S/CNV_pipeline.git
