@@ -5,7 +5,7 @@
 ##### Quick Start:
 In order to run a basic analysis with the default arguments run the code below with modified variables for the data of interest:
 
-###### _Check that all [dependecies](https://github.com/Phil9S/CNV_pipeline#dependencies) are installed then:_
+###### _Check that all [dependecies](https://github.com/Phil9S/CNV_pipeline#dependencies) are installed, then:_
 ######  _clone the git_
 ```
 git clone https://github.com/Phil9S/CNV_pipeline.git
@@ -23,10 +23,10 @@ _Remember to correctly specify the params.txt, interval file, and change the ref
 
 |ARGUMENT|TYPE|DESCRIPTION|
 |---|---|---|
-|**-i** --input         |Folder             |A directory path containing the .bam files to be used in the CNV analysis.Must end in .bam & have index files present in the same folder|
+|**-i** --input         |Folder             |A directory path containing the .bam files to be used in the CNV analysis. Must end in .bam & have index files present in the same folder|
 |**-c** --cohort			|String				|A string or identifying label to mark the appropraite output folder. e.g "RCC" for the	kidney cancer dataset|		
 |**-o** --output			|Folder				|A directory path for a preferrably empty folder in which all resulting files will be deposited|
-|**-p** --params		|File				|Path for the params.txt file specifically required for the xhmm analysis. Dile is included in the xhmm download|
+|**-p** --params		|File				|Path for the params.txt file specifically required for the xhmm analysis. File is included in the xhmm download|
 |**-v** --interval			|File				|Interval file provided by illumina, typically a file named Nextera_Exome_hg38, in tsv bed format, BED4 without header.|
 #### Mode tags
 * These are provided at any point within the command to specify running modes - e.g. temporary file retention
