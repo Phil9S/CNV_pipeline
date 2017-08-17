@@ -411,8 +411,6 @@ ls ${inputfolder}*.bam > bam_list_xhmm
 #sleep 120
 ###XHMM Analysis
 if [[ ${call} = "FALSE"  ]]; then
-	echo "inside if"
-	exit
 	echo -e "## XHMM ANALYSIS ## - Bam files split into 6 sets...(Stage 1 of 10)\n"
 	split -a 1 --numeric-suffixes=1 --additional-suffix=.list -n l/6 bam_list_xhmm bam_chunk
 
@@ -521,7 +519,6 @@ if [[ ${call} == "TRUE" ]] && [[ `ls xhmmCNV.mergeDepths.txt | wc -l` < 1 ]]; th
 	exit
 fi
 
-exit
 ###calculates the GC Content of the exome intervals
 java -Xmx30g -jar ${gatk} -T GCContentByInterval -L ${interval} -R ${ref} -o DATA_GC_percent.txt > /dev/null 2>&1
 echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean read depth...(Stage 4 of 10)\n"
