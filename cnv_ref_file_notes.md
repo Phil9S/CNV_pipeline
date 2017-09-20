@@ -97,12 +97,12 @@ Once that is complete, move into the folder containing the final analysis result
 By editing the cnvANNO.R script which was copied to the working directory, it is possible to generate a new reference gene/exon frequency list through commenting and uncommenting lines. It is also possible to re-run the annotation with differing parameters.
 
 ##### Comment out the following lines:
-###### Lines 42-43
+###### Lines 40-41
 ```R
 ref.list <- read.table("ref_CNVs.txt", sep = "\t", stringsAsFactors = FALSE)
 colnames(ref.list) <- c("EXON","CNV","AF_ref")
 ```
-###### Lines 124-128
+###### Lines 122-126
 ```R
 x <- merge(x, ref.list, by = c("EXON","CNV"), all.x = TRUE, fill = 0)
 x[is.na(x)] <- 0
@@ -110,17 +110,17 @@ x <- cbind(x[1:11],x[ncol(x)],x[13:ncol(x)-1])
 #remove commonly altered exons in BC1958 Cohort
 x <- x[x$AF_ref < ref_af_value,]
 ```
-###### Line 132
+###### Line 130
 ```R
 x <- x[x$AF_all < int_af_value,]
 ```
-###### Lines 147-148
+###### Lines 145-146
 ```R
 rm(aux,cnv,f.aux,gene_exon,intv,ref.list,AF_all,args,int_af_value,ref_af_value)
 save.image(file="cnvANNO.RData")
 ```
 ##### Remove comments from the following lines:
-###### Lines 117-118
+###### Lines 115-116
 ```R
 #freq.list <- x[,c("EXON","CNV","AF_all")]
 #write.table(freq.list, file = "ref_CNVs.txt", sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
