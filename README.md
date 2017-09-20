@@ -120,5 +120,5 @@ A secondary version of the CNV_xhmm.sh script (CNV_LARGEBATCH_xhmm.sh) is provid
 
 This script functions identically to its normal counterpart and can be run in the same way
 ```
-./CNV_xhmm.sh -c My_project -i /data/BAMS/ -o /data/CNV_REULTS/ -p params.txt -v ref_exome.bed -tr
+./CNV_LARGEBATCH_xhmm.sh -c My_project -i /data/BAMS/ -o /data/CNV_REULTS/ -p params.txt -v ref_exome.bed -tr
 ```
