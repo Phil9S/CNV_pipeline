@@ -14,7 +14,7 @@ git clone https://github.com/Phil9S/CNV_pipeline.git
 ###### _move to the git directory & run the following command_
 ```Bash
 cd CNV_pipeline/
-./CNV_analysis.sh -c My_project -i /data/BAMS/ -o /data/CNV_REULTS/ -p params.txt -v ref_exome.bed
+./CNV_xhmm.sh -c My_project -i /data/BAMS/ -o /data/CNV_REULTS/ -p params.txt -v ref_exome.bed
 ```
 _Remember to correctly specify the params.txt, interval file, and change the ref (-r) to one matching the interval file_
 ##### _Known issues_ 
@@ -105,13 +105,20 @@ For information regarding the generation of a BED file for this script, see [thi
 ---
 ## Examples:
 ##### General syntax - Run from the git directory
-`./CNV_analysis.sh [Required arguments] [optional arguments] [Mode tags]`
+`./CNV_xhmm.sh [Required arguments] [optional arguments] [Mode tags]`
 ##### Specific cases:
-###### Running xhmm analysis on a folder containing bams & remove temp files:
+###### Running analysis on a folder containing bams & remove temp files:
 ```
-./CNV_analysis.sh -c My_project -i /data/BAMS/ -o /data/CNV_REULTS/ -p params.txt -v ref_exome.bed -tr
+./CNV_xhmm.sh -c My_project -i /data/BAMS/ -o /data/CNV_REULTS/ -p params.txt -v ref_exome.bed -tr
 ```
-###### Running xhmm call-only mode with new values for minimum Target size:
+###### Running in call-only mode with new values for minimum Target size:
 ```
-./CNV_analysis.sh -c Existing_project -i /data/BAMS/ -o /data/CNV_REULTS/ -p params.txt -v ref_exome.bed -minTS 10 -maxTS 1000 -call
+./CNV_xhmm.sh -c Existing_project -i /data/BAMS/ -o /data/CNV_REULTS/ -p params.txt -v ref_exome.bed -minTS 10 -maxTS 1000 -call
+```
+###### Running using the "LARGE_BATCH" script - Designed for batch running large datasets:
+A secondary version of the CNV_xhmm.sh script (CNV_LARGEBATCH_xhmm.sh) is provided to allow easy batching and analysis of large datasets (>500 samples) in order to minimise RAM usage to a maximum of ~150GB
+
+This script functions identically to its normal counterpart and can be run in the same way
+```
+./CNV_xhmm.sh -c My_project -i /data/BAMS/ -o /data/CNV_REULTS/ -p params.txt -v ref_exome.bed -tr
 ```
