@@ -293,7 +293,7 @@ for(s in sample_list){
              theme(strip.text = element_text(face = "bold", size = 16, hjust = 0.01))
             
   ## Plotting graph to .png file - scale png length with number of chromosomes so each are evenly sized
-  png(file = paste("cnv_calls_",s,".png"), width = 15, height = length(unique(y$chr))*3, units = "in", res = 300)
+  png(file = paste("cnv_calls_",s,".png",sep=""), width = 15, height = length(unique(y$chr))*3, units = "in", res = 300)
   print(p2)
   dev.off()
   
