@@ -127,7 +127,7 @@ x <- x[x$AF_ref < ref_af_value,]
 
 #NONREF#
 ###all exons with AF more than 0.05 in analysis cohort - removed for now - causes loss of all rows and errors if no output is < value
-x <- x[x$AF_all < int_af_value,]
+#x <- x[x$AF_all < int_af_value,]
 
 ###string split Exon into gene and exon
 gene_exon <- as.data.frame(str_split(as.character(x$EXON), "_", simplify = TRUE),stringsAsFactors = FALSE)
