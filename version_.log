@@ -1,2 +1,7 @@
+Major changes
 [2017/08/08] Black Gold Radian
   - initial  final version
+[2017/10/24] Olive Gold Volt
+  - Updated PCA plot handling to allow skipping
+  - Updated CNV plot handling to allow skipping
+  - Added truncated help and extended help options

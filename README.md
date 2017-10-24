@@ -1,4 +1,4 @@
-# CNV Pipeline (v.Black Gold Radian)
+# CNV Pipeline (v.Olive Gold Volt)
 
 ##### Script for running xhmm CNV algorithms on a set of bam files using xhmm - [Fromer et al. 2014](http://onlinelibrary.wiley.com/doi/10.1002/0471142905.hg0723s81/abstract;jsessionid=FDFFC8DB52043AE0D6DDE0DEEF2C9F9B.f03t02)
 ###### _NB: This will only work on Whisperwind (Dept of Medical Genetics) and will require major revisions on other machines_
@@ -37,6 +37,8 @@ _Remember to correctly specify the params.txt, interval file, and change the ref
 |---|---|---|
 |**-tr** --temp-remove		|Argument			|Providing the option -tr or --temp-remove, given without a proceeding file/folder/string results in the DELETION of all temporary files generated	during the CNV analysis, inlcuding Depth of coverage.|
 |**-call** --call-only		|Argument			|Providing this option allows the pipeline to run without performing the depth of coverage analysis. This is particularly useful for re-calling data with new parameters or cutoffs|
+|**-PCA_null** --PCA_plot_null		|Argument			|Provide this option to skip the plotting of PCA variance for the CNV calling run - PCA normalisation is still applied|
+|**-PLOT_null** --CNV_plot_null		|Argument			|Provide this tag to skip plotting of CNV/chr map graphs to visualise CNV distributions|
 
 #### Optional Arguments
 * These options are not required to run as defaults have been set internally

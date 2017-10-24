@@ -1,11 +1,10 @@
 #!/bin/bash
-date
-## CNV Pipeline
+## CNV Pipeline - Written by Philip Smith
 ##Programme and reference files
 gatk="/data/Resources/Software/Javas/GenomeAnalysisTK.jar"
 ref="/data/Resources/References/hg38.bwa/hg38.bwa.fa"
 ##Command-line variables
-version="Black Gold Radian"
+version="Olive Gold Volt"
 inputfolder="NULL"
 int="NULL"
 params="NULL"
@@ -22,13 +21,72 @@ maxSdSampleRD=500
 PVE_mean_factor=0.7
 maxSdTargetRD=100
 call="FALSE"
+PCA_plot="TRUE"
+CNV_plot="TRUE"
 
 #Admin BLOCK - Help, temp files, default message
 #help
 for arg in "$@"; do
-	if [[ "$arg" == "-h" ]] || [[ "$arg" == "--help" ]]; then
+        if [[ "$arg" == "-h" ]] || [[ "$arg" == "--help" ]]; then
 		echo -e "
-## CNV analysis ## - HELP Documentation - v.${version} ##
+## CNV analysis ## - HELP Documentation - v.${version}
+
+Script for running xhmm CNV algorithms on a set of bam files
+
+Required arguments:
+
+ARGUMENT                        TYPE                            DESCRIPTION
+
+-i --input                      folder                          A directory path containing the .bam files to
+                                                                be used in the CNV analysis. Must end in .bam
+                                                                & have index files present in the same folder
+
+-c --cohort                     string                          A string or identifying label to mark the ap-
+                                                                propraite output folder. e.g \"RCC\" for the
+                                                                kidney cancer dataset
+
+-o --output                     folder                          A directory path for a preferrably empty folder
+                                                                in which all resulting files will be deposited
+
+-p --params (xhmm only)         file                            Path for the params.txt file specifically requ-
+                                                                -ired for the xhmm analysis. Default params.txt
+                                                                file is included in the xhmm download
+
+-v --interval                   file                            Interval file provided by illumina, typically a
+                                                                file named Nextera_Exome_hg38, in tsv bed format,
+                                                                BED4 without header
+
+Mode Tags:
+-tr --temp-remove               argument                        Providing the option -tr or --temp-remove, given
+                                                                without a proceeding file/folder/string results
+                                                                in the DELETION of all temporary files generated
+                                                                during the CNV analysis, inlcuding Depth of cov-
+                                                                erage
+
+-PCA_null --PCA_plot_null       argument                        Provide this option to skip the plotting of PCA
+                                                                variance for the CNV calling run - PCA normalis-
+                                                                -ation is still applied
+
+-PLOT_null --CNV_plot_null                                      Provide this tag to skip plotting of CNV/chr map
+                                                                graphs to visualise CNV distributions
+
+-call --call-only               argument                        Providing this option allows the pipeline to run
+                                                                without performing the depth of coverage analysis
+                                                                This is particularly useful for re-calling data
+                                                                with new parameters or cutoffs
+
+Use -h-more or --help-more to see extended help documentation
+"
+                echo -e "\n"
+                exit
+        fi
+done
+
+
+for arg in "$@"; do
+	if [[ "$arg" == "--help-more" ]] || [[ "$arg" == "-h-more" ]]; then
+		echo -e "
+## CNV analysis ## - HELP Documentation - v.${version}
 
 Script for running xhmm CNV algorithms on a set of bam files
 
@@ -61,6 +119,13 @@ Mode Tags:
 								in the DELETION of all temporary files generated
 								during the CNV analysis, inlcuding Depth of cov-
 								erage
+
+-PCA_null --PCA_plot_null	argument			Provide this option to skip the plotting of PCA
+								variance for the CNV calling run - PCA normalis-
+								-ation is still applied
+
+-PLOT_null --CNV_plot_null					Provide this tag to skip plotting of CNV/chr map
+								graphs to visualise CNV distributions						
 								
 -call --call-only		argument			Providing this option allows the pipeline to run
 								without performing the depth of coverage analysis
@@ -142,6 +207,7 @@ Examples:
 
 Running xhmm analysis on a folder containing bams & remove temp files:
 ./CNV_analysis.sh -c My_project -i /data/BAMS/ -o /data/CNV_REULTS/ -p params.txt -v ref_exome.bed -tr
+
 Running xhmm calling with new values:
 ./CNV_analysis.sh -c Existing_project -i /data/BAMS/ -o /data/CNV_REULTS/ -p params.txt -v ref_exome.bed -minTS 10 -maxTS 1000 -call
 "			               
@@ -155,6 +221,7 @@ if [[ $# -eq 0 ]]; then
 	echo -e "\n## CNV Pipeline ## - You need to provide at least SOME arguments! Try using -h / --help for documentation and examples!\n"
 	exit
 fi
+## TAG HANDLING
 #temp file handling
 for arg in "$@"; do
   if [[ "$arg" == "-tr" ]] || [[ "$arg" == "--temp-remove" ]]; then
@@ -162,12 +229,25 @@ for arg in "$@"; do
     temp="FALSE"
   fi
 done
-
+#call mode tag
 for arg in "$@"; do
   if [[ "$arg" == "-call" ]] || [[ "$arg" == "--call-only" ]]; then
     call="TRUE"
   fi
 done
+#PCA_null tag
+for arg in "$@"; do
+  if [[ "$arg" == "-PCA_null" ]] || [[ "$arg" == "--PCA_plot_null" ]]; then
+    PCA_plot="FALSE"
+  fi
+done
+#PLOT_null tag
+for arg in "$@"; do
+  if [[ "$arg" == "-PLOT_null" ]] || [[ "$arg" == "--CNV_plot_null" ]]; then
+    CNV_plot="FALSE"
+  fi
+done
+
 
 
 
@@ -345,9 +425,12 @@ if [[ ! -f ${ref} ]]; then
         exit
 fi
 
+###XHMM output process block##
+echo -e "\n## CNV Pipeline ## - Started at: $(date)"
+
 ##Generating work-environment folder
 if [ -d "${outputfolder}cnv_analysis" ]; then
-	echo -e "\n## CNV Pipeline ## - Root folder exists - folder not generated\n"
+	echo -e "## CNV Pipeline ## - Root folder exists - folder not generated"
 else
 	mkdir ${outputfolder}cnv_analysis
 fi
@@ -357,20 +440,16 @@ cp cnvPLOTS.R ${outputfolder}cnv_analysis/
 cp ref_CNVs.txt ${outputfolder}cnv_analysis/
 cd ${outputfolder}cnv_analysis
 
-
-###XHMM output process block##
-echo -e "## XHMM ANALYSIS ## - Started at: $(date)\n"
-
 ###Output directory
 if [ -d "xhmm_analysis_${cohort}" ]; then
-	echo -e "## XHMM ANALYSIS ## - Analysis folder exists - folder not generated\n"
+	echo -e "## CNV Pipeline ## - Analysis folder exists - folder not generated"
 else
 	mkdir xhmm_analysis_${cohort}
 fi
 
 ###Temp folder generation
 if [ -d "xhmm_analysis_${cohort}/temp" ]; then
-	echo -e "## XHMM ANALYSIS ## - Temporary folder exists - folder not generated\n"
+	echo -e "## CNV Pipeline ## - Temporary folder exists - folder not generated"
 else 
 	mkdir xhmm_analysis_${cohort}/temp
 fi
@@ -381,40 +460,41 @@ mv ref_CNVs.txt xhmm_analysis_${cohort}
 cd xhmm_analysis_${cohort}/temp
 
 ##Variable reporting
-echo -e "## CNV Pipeline ## Argument summary:"
-echo -2 "## CNV Pipeline ## Version ${version}"
-echo -e "## CNV Pipeline ## Genome analysis TK jar file - ${gatk}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Reference fasta file - ${ref}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Input folder - ${inputfolder}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Interval file - ${int}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Parameters file - ${params}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Cohort/Project name - ${cohort}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Output folder - ${outputfolder}cnv_analysis/" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Temporary file deletion = ${temp}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Minimum target size = ${minTargetSize}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Maximum target size = ${maxTargetSize}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Minimum mean target read depth = ${minMeanTargetRD}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## maximum mean target read depth = ${maxMeanTargetRD}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Minimum mean sample read depth = ${minMeanSampleRD}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Maximum mean sample read depth = ${maxMeanSampleRD}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Maximum standard dev. sample read depth = ${maxSdSampleRD}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Maximum standard dev. target read depth = ${maxSdTargetRD}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## PCA variance cut off set to ${PVE_mean_factor}" | tee -a cnv.log
-echo -e "## CNV Pipeline ## Call only mode set to ${call}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Argument summary:\n"
+echo -e "## CNV Pipeline ## - Version ${version}"
+echo -e "## CNV Pipeline ## - Genome analysis TK jar file - ${gatk}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Reference fasta file - ${ref}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Input folder - ${inputfolder}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Interval file - ${int}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Parameters file - ${params}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Cohort/Project name - ${cohort}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Output folder - ${outputfolder}cnv_analysis/" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Temporary file deletion = ${temp}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Minimum target size = ${minTargetSize}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Maximum target size = ${maxTargetSize}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Minimum mean target read depth = ${minMeanTargetRD}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Maximum mean target read depth = ${maxMeanTargetRD}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Minimum mean sample read depth = ${minMeanSampleRD}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Maximum mean sample read depth = ${maxMeanSampleRD}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Maximum standard dev. sample read depth = ${maxSdSampleRD}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Maximum standard dev. target read depth = ${maxSdTargetRD}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - PCA variance cut off set to ${PVE_mean_factor}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - Call only mode set to ${call}" | tee -a cnv.log
+echo -e "## CNV Pipeline ## - PCA plotting is set to ${PCA_plot}" | tee -a cnv.log
 
 ## folder setup
 cp ${int} xhmm.intervals
-vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals
+vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals > /dev/null 2>&1
 interval="xhmm.intervals"
 ls ${inputfolder}*.bam > bam_list_xhmm
 
-#sleep 120
 ###XHMM Analysis
+echo -e "## CNV Pipeline ## - XHMM started..."
 if [[ ${call} = "FALSE"  ]]; then
-	echo -e "## XHMM ANALYSIS ## - Bam files split into 6 sets...(Stage 1 of 10)\n"
+	echo -e "## XHMM ANALYSIS ## - Bam files split into 6 sets...(Stage 1 of 10)"
 	split -a 1 --numeric-suffixes=1 --additional-suffix=.list -n l/6 bam_list_xhmm bam_chunk
 
-	echo -e "## XHMM ANALYSIS ## - Performing depth of coverage...(Stage 2 of 10)\n"
+	echo -e "## XHMM ANALYSIS ## - Performing depth of coverage...(Stage 2 of 10)"
 
 	java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk1.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
 	-l INFO \
@@ -499,7 +579,7 @@ if [[ ${call} = "FALSE"  ]]; then
 	wait
 	sleep 5
 	
-	echo -e "## XHMM ANALYSIS ## - Merging depth of coverage files & Calculating GC content...(Stage 3 of 10)\n"
+	echo -e "## XHMM ANALYSIS ## - Merging depth of coverage files & Calculating GC content...(Stage 3 of 10)"
 		
 	###Combines GATK Depth-of-Coverage outputs for multiple samples (at same loci):
 	xhmm --mergeGATKdepths -o xhmmCNV.mergeDepths.txt \
@@ -521,7 +601,7 @@ fi
 
 ###calculates the GC Content of the exome intervals
 java -Xmx30g -jar ${gatk} -T GCContentByInterval -L ${interval} -R ${ref} -o DATA_GC_percent.txt > /dev/null 2>&1
-echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean read depth...(Stage 4 of 10)\n"
+echo -e "## XHMM ANALYSIS ## - Removing extreme GC regions and centering to mean read depth...(Stage 4 of 10)"
 	
 ###Concatonates and asseses GC content (if less than 0.1 or more than 0.9 -> print to new file
 cat DATA_GC_percent.txt | awk '{if ($2 < 0.1 || $2 > 0.9) print $1}' > extreme_gc_targets.txt
@@ -531,12 +611,14 @@ xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhm
 ##version of line before command line control was added - not used
 #xhmm --matrix -r xhmmCNV.mergeDepths.txt --centerData --centerType target -o xhmmCNV.filtered_centered.RD.txt --outputExcludedTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --outputExcludedSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeTargets extreme_gc_targets.txt --minTargetSize 1 --maxTargetSize 20000 --minMeanTargetRD 10 --maxMeanTargetRD 6000 --minMeanSampleRD 30 --maxMeanSampleRD 2000 --maxSdSampleRD 500 > /dev/null 2>&1
 
-echo -e "## XHMM ANALYSIS ## - Analysing PCA plot...(Stage 5 of 10)\n"
+echo -e "## XHMM ANALYSIS ## - Analysing PCA plot...(Stage 5 of 10)"
 ###Performs PCA to generate component variation - decreases data variability due to 1st-nth priciple components
 xhmm --PCA -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PCA > /dev/null 2>&1
 
-wd=`pwd`
-Rscript cnvPCA.R ${wd}
+if [[ ${PCA_plot} == "TRUE" ]]; then
+	wd=`pwd`
+	Rscript cnvPCA.R ${wd}
+
 
 vim -c '%s/\(Variance threshold at Principle component: \)\(\S\+\)/\r\1\2/|wq' PCA_summary.txt
 vim -c '%s/ Standard deviation/\rStandard deviation/g|wq' PCA_summary.txt
@@ -548,8 +630,11 @@ vim -c '%s/\(Proportion of Variance\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\
 vim -c '%s/\(Cumulative Proportion\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6/g|wq' PCA_summary.txt
 vim -c '1d|wq' PCA_summary.txt
 vim -c '$m 0|wq' PCA_summary.txt
+else
+	echo -e "## XHMM ANALYSIS ## - PCA_plot_null - Skipping PCA plotting"
+fi
 
-echo -e "## XHMM ANALYSIS ## - Normalising RD data on PCA results...(Stage 6 of 10)\n"
+echo -e "## XHMM ANALYSIS ## - Normalising RD data on PCA results...(Stage 6 of 10)"
 ###Normalises the mean centered data using the PCA data
 xhmm --normalize -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PCA --normalizeOutput xhmmCNV.PCA_normalized.txt --PCnormalizeMethod PVE_mean --PVE_mean_factor ${PVE_mean_factor} > /dev/null 2>&1
 
@@ -559,48 +644,53 @@ xhmm --matrix -r xhmmCNV.PCA_normalized.txt --centerData --centerType sample --z
 ###applies the normalisation and z-scoring to the standard non-normalised and centered data set
 xhmm --matrix -r xhmmCNV.mergeDepths.txt --excludeTargets xhmmCNV.filtered_centered.RD.txt.filtered_targets.txt --excludeTargets xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt.filtered_targets.txt --excludeSamples xhmmCNV.filtered_centered.RD.txt.filtered_samples.txt --excludeSamples xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt.filtered_samples.txt -o xhmmCNV.same_filtered.RD.txt > /dev/null 2>&1
 
-echo -e "## XHMM ANALYSIS ## - Discovering CNVs...(Stage 7 of 10)\n"	
+echo -e "## XHMM ANALYSIS ## - Discovering & Genotyping CNV calls...(Stage 7 of 10)"	
 ###performs assessment of the z-score to identify high levels of statistcal deviation in interval regions
 xhmm --discover -p ${params} -r xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt -R xhmmCNV.same_filtered.RD.txt -c xhmmCNV.xcnv -a xhmmCNV.aux_xcnv -s xhmmCNV > /dev/null 2>&1
-
-echo -e "## XHMM ANALYSIS ## - Genotyping called CNVs...(Stage 7 of 10)\n"
 
 ###genotypes indentified CNV during prior discovery steps
 xhmm --genotype -p ${params} -r xhmmCNV.PCA_normalized.filtered.sample_zscores.RD.txt -R xhmmCNV.same_filtered.RD.txt -g xhmmCNV.xcnv -F ${ref} -v xhmmCNV.vcf > /dev/null 2>&1
 
 ###Results annotation & formatting##
-echo -e "## XHMM ANALYSIS ## - Moving output from TEMP...(Stage 8 of 10)\n"
+echo -e "## CNV Pipeline ## - XHMM finished..." 
+echo -e "## CNV Pipeline ## - Moving output from TEMP...(Stage 8 of 10)"
 
 ###xcnv to bed format conversion
 if (( $(cat xhmmCNV.xcnv | wc -l) < '2' )); then
-        echo -e "## XHMM ANALYSIS ## - ERROR: No CNVs called - Likely too few samples\n"
-        echo -e "## XHMM ANALYSIS ## - XHMM analysis exiting"
+        echo -e "## CNV Pipeline ## - ERROR: No CNVs called - Likely too few samples"
+        echo -e "## CNV Pipeline ## - XHMM analysis exiting"
         exit
 fi
 
 mv xhmmCNV.xcnv ../xhmmCNV.xcnv
 mv bam_list_xhmm ../xhmm_samplelist.txt
+if [[ ${PCA_plot} == "TRUE" ]]; then
 mv PCA_Scree.png ../PCA_Scree.png
 mv PCA_summary.txt ../PCA_summary.txt
+fi
 mv xhmmCNV.aux_xcnv ../xhmmCNV.aux_xcnv
 mv cnv.log ../cnv.log
 
 cd ../
 
-echo -e "## XHMM ANALYSIS ## - Annotating output...(Stage 9 of 10)\n"
+echo -e "## CNV Pipeline ## - Annotating output...(Stage 9 of 10)"
 
 Rscript cnvANNO.R ${int} > /dev/null 2>&1
 
-echo -e "## XHMM ANALYSIS ## - Plotting Graphs...(Stage 10 of 10)\n"
-Rscript cnvPLOTS.R > /dev/null 2>&1
+if [[ ${CNV_plot} == "TRUE" ]]; then
+	echo -e "## CNV Pipeline ## - Plotting Graphs...(Stage 10 of 10)"
+	Rscript cnvPLOTS.R > /dev/null 2>&1
 
-mkdir cnv_plots
-mv cnv_calls_*.png cnv_plots/
+	mkdir cnv_plots
+	mv cnv_calls_*.png cnv_plots/
+else
+	echo -e "## CNV Pipeline ## - CNV_plot_null - Skipping CNV plots...(Stage 10 of 10)"
+fi
 
+##temp fil removing 
 if [[ "$temp" == "FALSE" ]]; then
               rm -r temp
 fi
 
-echo -e "## XHMM ANALYSIS ## - COMPLETE!"
-date
+echo -e "## CNV Pipeline ## - Finished at: $(date)"
 
