@@ -482,6 +482,7 @@ echo -e "## CNV Pipeline ## - PCA variance cut off set to ${PVE_mean_factor}" | 
 echo -e "## CNV Pipeline ## - Call only mode set to ${call}" | tee -a cnv.log
 echo -e "## CNV Pipeline ## - PCA plotting is set to ${PCA_plot}" | tee -a cnv.log
 echo -e "## CNV Pipeline ## - CNV/CHR plotting is set to ${CNV_plot}" | tee -a cnv.log
+echo -e ""
 
 ## folder setup
 cp ${int} xhmm.intervals
