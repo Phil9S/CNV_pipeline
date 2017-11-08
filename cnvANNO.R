@@ -1,4 +1,4 @@
-##CNV Pipeline - Black Gold Radian
+##CNV Pipeline - Olive Gold Volt
 rm(list = ls())
 args = commandArgs(trailingOnly=TRUE)
 require(methods)

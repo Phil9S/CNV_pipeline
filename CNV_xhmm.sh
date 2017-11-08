@@ -619,7 +619,7 @@ xhmm --PCA -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PC
 
 if [[ ${PCA_plot} == "TRUE" ]]; then
 	wd=`pwd`
-	Rscript cnvPCA.R ${wd}
+	Rscript cnvPCA.R ${wd} ${PVE_mean_factor}
 
 
 vim -c '%s/\(Variance threshold at Principle component: \)\(\S\+\)/\r\1\2/|wq' PCA_summary.txt

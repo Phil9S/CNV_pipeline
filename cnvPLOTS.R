@@ -1,4 +1,4 @@
-## CNV Pipeline - Black Gold Radian
+## CNV Pipeline - Olive Gold Volt
 #### Input and environment setup ####
 rm(list = ls())
 ## load data from cnvANNO.R script
