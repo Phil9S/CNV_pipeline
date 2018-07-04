@@ -5,7 +5,7 @@ args = commandArgs(trailingOnly=TRUE)
 setwd(args[1])
 
 PCA <- args[2]
-PCA <- PCA * 100
+PCA <- as.numeric(PCA) * 100
 
 if(!require(ggplot2)){
   install.packages("ggplot2",repos = "https://mirrors.ebi.ac.uk/CRAN/")

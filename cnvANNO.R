@@ -33,12 +33,12 @@ ref_af_value <- 0.05
 options(digits=3)
 ###Read in files for CNV annotation script
 cnv <- read.table("xhmmCNV.xcnv", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-intv <- read.table(args[1], sep = "\t", stringsAsFactors = FALSE)
+intv <- read.table("/home/pss41/beds/CNV/hg38/cnv_targets_masked_pad_sort_hg38.bed", sep = "\t", stringsAsFactors = FALSE)
 colnames(intv) <- c("chr","start","stop","exon")
 aux <- read.table("xhmmCNV.aux_xcnv", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 #NONREF#
-ref.list <- read.table("ref_CNVs.txt", sep = "\t", stringsAsFactors = FALSE)
-colnames(ref.list) <- c("EXON","CNV","AF_ref")
+#ref.list <- read.table("ref_CNVs.txt", sep = "\t", stringsAsFactors = FALSE)
+#colnames(ref.list) <- c("EXON","CNV","AF_ref")
 
 
 
@@ -119,22 +119,22 @@ x <- cbind(x[1:10],AF_all,x[11:ncol(x)])
 
 #NONREF#
 #adding REF_AF
-x <- merge(x, ref.list, by = c("EXON","CNV"), all.x = TRUE, fill = 0)
-x[is.na(x)] <- 0
-x <- cbind(x[1:11],x[ncol(x)],x[13:ncol(x)-1])
-#remove commonly altered exons in ref Cohort
-x <- x[x$AF_ref < ref_af_value,]
+# x <- merge(x, ref.list, by = c("EXON","CNV"), all.x = TRUE, fill = 0)
+# x[is.na(x)] <- 0
+# x <- cbind(x[1:11],x[ncol(x)],x[13:ncol(x)-1])
+# #remove commonly altered exons in ref Cohort
+# x <- x[x$AF_ref < ref_af_value,]
 
 #NONREF#
 ###all exons with AF more than 0.05 in analysis cohort - removed for now - causes loss of all rows and errors if no output is < value
 #x <- x[x$AF_all < int_af_value,]
 
 ###string split Exon into gene and exon
-gene_exon <- as.data.frame(str_split(as.character(x$EXON), "_", simplify = TRUE),stringsAsFactors = FALSE)
-gene_exon <- gene_exon[-3]
-colnames(gene_exon) <- c("GENE","EXON")
-x <- x[-1]
-x <- cbind(gene_exon,x[1:ncol(x)])
+# gene_exon <- as.data.frame(str_split(as.character(x$EXON), "_", simplify = TRUE),stringsAsFactors = FALSE)
+# gene_exon <- gene_exon[-3]
+# colnames(gene_exon) <- c("GENE","EXON")
+# x <- x[-1]
+# x <- cbind(gene_exon,x[1:ncol(x)])
 
 ## Make sure chr positions are unified as numeric - not containing "chr"
 x$CHR <- gsub("chr","",x$CHR)
@@ -142,5 +142,5 @@ x$TARGET <- gsub("chr","",x$TARGET)
 ## write output
 write.table(x, file="cnv_xhmm_annotated.tsv", sep="\t", quote = FALSE, row.names = FALSE, col.names = TRUE, na = "-9")
 #NONREF#
-rm(aux,cnv,f.aux,gene_exon,intv,ref.list,AF_all,args,int_af_value,ref_af_value)
+rm(aux,cnv,f.aux,gene_exon,intv,AF_all,args,int_af_value,ref_af_value) #ref.list,
 save.image(file="cnvANNO.RData")

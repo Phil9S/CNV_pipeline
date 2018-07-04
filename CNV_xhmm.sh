@@ -4,18 +4,18 @@
 gatk="/data/Resources/Software/Javas/GenomeAnalysisTK.jar"
 ref="/data/Resources/References/hg38.bwa/hg38.bwa.fa"
 ##Command-line variables
-version="Olive Gold Volt"
+version="White Iron Photon"
 inputfolder="NULL"
 int="NULL"
 params="NULL"
 cohort="default"
 outputfolder="NULL"
 temp="TRUE"
-minTargetSize=1
-maxTargetSize=20000
+minTargetSize=5
+maxTargetSize=2000
 minMeanTargetRD=10
-maxMeanTargetRD=6000
-minMeanSampleRD=30
+maxMeanTargetRD=2000
+minMeanSampleRD=20
 maxMeanSampleRD=2000
 maxSdSampleRD=500
 PVE_mean_factor=0.7

@@ -5,3 +5,9 @@ Major changes
   - Updated PCA plot handling to allow skipping
   - Updated CNV plot handling to allow skipping
   - Added truncated help and extended help options
+[2018/07/02] White Iron Photon
+  - Reworked reference interval file generation
+  - Annotations now contain all transcripts
+  - Adapted scripts to match new format
+  - Added new plotting and cnv calling graphics
+  - Updated reference file guide to match new format

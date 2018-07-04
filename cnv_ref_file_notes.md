@@ -1,86 +1,112 @@
 # Generation of BED4 files & frequency lists from reference datasets
 
 ## Exon Interval file 
-The interval file (specified by -v --interval) is a required file for the CNV Pipeline to run but is likely to be the cause of most common errors, run failures, and/or annotation failures. This file attempts to document how the interval file was generated and how a reference set of frequently altered genes/exons was created
+The interval file (specified by -v --interval) is a required file for the CNV Pipeline to run but is likely to be the cause of most common errors, run failures, and/or annotation failures. This file attempts to document how the interval file was generated and how a reference set of frequently altered genes/exons was created.
+### Required files:
+#### Reference intervals
 
-#### Reference interval retrieval   
+Exon bed file was downloaded from [Biomart](https://www.ensembl.org/biomart) in tsv format and reformatted to fit BED4 specfications and the specifications detailed in the main user guide.
 
-Whisperwind:
-/data/Resources/Beds/All_exons_hg38.bed
-/data/Resources/Beds/nexterarapidcapture_exome_targetedregions_v1.2_hg38.bed
-
-[Bedtools](http://bedtools.readthedocs.io/en/latest/) provides an excellent tool set for easily comparing sets of genomic intervals for overlap and/or intersections
+The database attributes gathered were (unique entries only): 
+- "Chromosome/scaffold name"
+- "Exon region start (bp)"
+- "Exon region end (bp)"
+- "Gene name"
+- "Exon rank in transcript"
+		
+Reformatting steps (Reference intervals):
 ```sh
-bedtools intersect -loj -wb -F 0.75 -b All_Exons_hg38.bed -a nextera_exome_targets_hg38.bed > intersect.txt
+sed -i '1d' exons_hg19.txt
+sed -i 's/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1\t\2\t\3\t\4_\5/g' exons_hg19.txt
+sort -k1,1 -k2,2n exons_hg19.txt > exons_hg19.sorted.bed
 ```
-
-```R
-intersect <- read.table("intersect.txt")
-intersect.dedup <- intersect[!duplicated(intersect),]
-intersect.blank.dedup <- intersect.dedup[!intersect.dedup$V4 == ".",]
-intersect.blank.dedup <- intersect.blank.dedup[!duplicated(intersect.blank.dedup[c(1:3,7)]),]
-intersect.blank.dedup.out <- intersect.blank.dedup[!duplicated(intersect.blank.dedup[c(4:6)]),]
-write.table(intersect.blank.dedup.out[c(1:3,7)],"cnv_nextera_targets_hg38.bed",quote=FALSE,sep="\t",row.names=FALSE,col.names=FALSE)
-```
+#### Probes
+Nextera probe positions were downloaded from [illumina](http://emea.support.illumina.com/sequencing/sequencing_kits/nextera-rapid-capture-exome-kit/downloads.html) to match library preparation kit
 
 #### Repeatmask files
 An important component of the interval file used is that is appropriately filtered for regions that are **not** of interest; this included regions overlapping low-complexity, repeat masked, regions of the genome. These regions are not useful and add noise to CNV calling so can be justifibly removed from the targets. The site repeatmasker.org provides catagorical fasta files for each type and span of these regions.
 
 Fasta files containing the type and genomic position of repeat-masked regions can be downloaded from [repeatmasker.org](http://www.repeatmasker.org/) using the following commands:
 ```sh
-wget -c "http://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz"
-gunzip hg38.fa.out.gz
+wget -c LINK_TO_REPEATMASKER_FA_FILE
+gunzip hg19.fa.out.gz
 ```
 The repeat-mask fasta is not immediately appropriate for use so some minor pre-processing steps are required to allow for interval comparisons (i.e. delimiter alterations, repeat type selection, and sorting by chromosome and position), shown below:
 ```sh
-awk -v OFS="\t" '$1=$1' hg38.fa.out > hg38_tab.fa.out
-grep "Simple_repeat" hg38_tab.fa.out >> lowcomplex_simpreps.hg38.bed
-grep "Low_complexity" hg38_tab.fa.out >> lowcomplex_simpreps.hg38.bed
-sort -k1,1 -k2,2n lowcomplex_simpreps.hg38.bed > lowcomplex_simpreps.sorted.hg38.bed
+awk -v OFS="\t" '$1=$1' hg19.fa.out > hg19_tab.fa.out
+grep "Simple_repeat" hg19_tab.fa.out >> lowcomplex_simpreps.hg19.bed
+grep "Low_complexity" hg19_tab.fa.out >> lowcomplex_simpreps.hg19.bed
+cut -f5-7 lowcomplex_simpreps.hg19.bed > lowcomplex_simpreps.cut.hg19.bed
+sed -i 's/chr//g' lowcomplex_simpreps.cut.hg19.bed #Skip if using >=GRCh38 
+sort -k1,1 -k2,2n lowcomplex_simpreps.cut.hg19.bed > lowcomplex_simpreps.sorted.hg19.bed
+
 ```
-#### generating list of overlapping intervals 
+### Bed file generation:
+#### Generating list of overlapping intervals 
 Filtering out intervals with any amount of repeat-mask overlap would be overly stringent so only exome intervals harbouring an overlap of 25% or more are excluded - In line with the steps performed [here](http://www.nature.com/ng/journal/v48/n10/full/ng.3638.html)
 
-The command below compares the exome interval set to the repeat-masked interval set generating a list of exons that are overlapped by repeat-masked regions by > 50%:
+The command below compares the exome interval set to the repeat-masked interval set generating a list of exons that are overlapped by repeat-masked regions by > 25%:
 ```sh
-bedtools intersect -wb -F 0.5 /
-		   -a cnv_nextera_targets_hg38.bed /
-		   -b lowcomplex_simpreps.sorted.hg38.bed > exon_repmask_overlap.txt
-vim -c '%s/\S\+\t\S\+\t\S\+\t\(\S\+\)\t\S\+\t\S\+\t\S\+\t\S\+/\1/|wq' exon_repmask_overlap.txt
-sort -u exon_repmask_overlap.txt > exon_repmask_overlap.uniq.txt
-```
-This list is then loaded into R with the exome interval BED file and non-matching exons are retained:
-```R
-t <- read.table("cnv_nextera_targets_hg38.bed", sep="\t")
-l <- read.table("exon_repmask_overlap.uniq.txt")
-t1 <- t[!t$V4 %in% l$V1,]
-write.table(t1, "cnv_nextera_targets_masked_hg38.bed", sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)
-```
-#### Adding padding to exon regions - 2bp upstream of start and 2bp downstream of end
-The final processing step is to add a number of padding bases to the intervals. This is intended to increase the fidelity of calls over target sets by incorporating more reads that align to the edges of target regions. Using R, code below adds a padding of 2bp to both the start and stop position of each exon present in the interval file:
+bedtools intersect -wb -v -F 0.25 \
+				   -a exons_hg19.sorted.bed \
+				   -b lowcomplex_simpreps.sorted.hg19.bed > exons_hg19.masked.bed
 
-```R
-t <- read.table("cnv_nextera_targets_masked_hg38.bed", sep="\t")
-n <- t
-n$V2 <- n$V2 - 2
-n$V3 <- n$V3 + 2
-write.table(n, "cnv_nextera_targets_masked_pad_hg38.bed", sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
-```
-The subsequent file is then sorted and moved to have the desired name via the commandline:
-```sh
-sort -k1,1 -k2,2n cnv_nextera_targets_masked_pad_hg38.bed > cnv_nextera_targets_masked_pad_hg38.bedsort
-mv cnv_nextera_targets_masked_pad_hg38.bedsort cnv_nextera_targets_masked_pad_hg38.bed
+sort -k1,1 -k2,2n exons_hg19.masked.bed > exons_hg19.masked.sorted.bed
 ```
 
+#### BED target filtering
+Regions overlapping with 50% of matching targets from the library preparation probes were retained using [Bedtools](http://bedtools.readthedocs.io/en/latest/)  intersect
+
+```sh
+bedtools intersect -loj -wb -F 0.5 \
+				   -b exons_hg19.masked.sorted.bed \
+				   -a nextera_exome_targets_hg19.bed > intersect.txt
+```
+The preceding files are loaded into R for filtering and target merging using the following code:
+```R
+## Load libraries
+library(dplyr)
+library(stringr)
+options(scipen = 999)
+## Load data and remove empty fields
+bed <- read.table("intersect.txt", sep="\t",comment.char = "",quote = "",fill = T,stringsAsFactors = F)
+bed <- bed[bed$V1 != ".",]
+bed <- bed[bed$V4 != ".",]
+bed <- bed[,-c(4:6)]
+## Keep unique and remove misencoded exons
+bed <- unique(bed)
+bed <- bed[which(!grepl(bed$V7,perl = T,pattern = "\\S+_\\S+_\\S+")),]
+## Collapse on genomic position
+bed_col <- bed %>% group_by(V1,V2,V3) %>% summarise_all(funs(paste(unique(.),collapse = ",")))
+## Add padding
+bed_col$V2 <- bed_col$V2 - 10
+bed_col$V3 <- bed_col$V3 + 10
+## Write output
+write.table(bed_col, "cnv_targets_masked_pad_hg19.bed", sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
+```
+##### Adding padding to exon regions - 10bp upstream of start and 10bp downstream of end
+The final processing step is to add a number of padding bases to the intervals. This is intended to increase the fidelity of calls over target sets by incorporating more reads that align to the edges of target regions. 
+
+The subsequent file is then sorted:
+```sh
+sort -k1,1 -k2,2n cnv_targets_masked_pad_hg19.bed > cnv_targets_masked_pad_sort_hg19.bed
+```
+Lastly the file is merged to collapse overlapping intervals into a single interval
+```sh
+bedtools merge -i cnv_targets_masked_pad_sort_hg19.bed -c 4 -o collapse > COLLAPSE.cnv_targets_masked_pad_sort_hg19.bed
+# Renamed
+mv COLLAPSE.cnv_targets_masked_pad_sort_hg19.bed cnv_targets_masked_pad_sort_hg19.bed
+```
 ##### Removal summary:
-Final interval file for CNV analysis: hg38_exons_Ensembl87.masked.autoXY.sorted.dedup.pad.bed (8,875Kb)
+An example file for CNV analysis: cnv_targets_masked_pad_sort_hg19.bed (7,953 Kb)
 
-|File|Size|Change|Process|
-|----|----|------|-------|
-|All_Exons_hg38.bed| 1,271,759 targets | Original file - Including all transcripts |
-|intersect.txt| 859,951 targets| -411,808 | Exon intersecting targets|
-|cnv_nextera_targets_hg38.bed| 244,380 targets| -615,571 | Removal of duplicated and overlapping targets|
-|cnv_nextera_targets_masked_pad_hg38.bed| 223,527 targets| -20853 | Repeat masked targets|
+|File|Targets|Change|
+|----|----|------|
+|Original file| 811,594 | 0 | 
+|Repeat masking| 761,902 | -49,692 |
+|Library probe overlap| 555,392 | -206,510 | 
+|Unique/Complete targets| 191,617  | -363,775 |
+|Collapsed| 178,861  | -12,756 |
 
 ## Reference for frequently altered exons
 The analysis provides frequencies for the occurance of exon alterations both internally (on the analysis cohort) & externally (currently the ICR1958 birth control cohort) to allow for both filtering and comparison of 'allelic' frequencies in the analysis
