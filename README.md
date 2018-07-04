@@ -1,5 +1,4 @@
-# CNV Pipeline (v.Olive Gold Volt)
-
+# CNV Pipeline
 ##### Script for running xhmm CNV algorithms on a set of bam files using xhmm - [Fromer et al. 2014](http://onlinelibrary.wiley.com/doi/10.1002/0471142905.hg0723s81/abstract;jsessionid=FDFFC8DB52043AE0D6DDE0DEEF2C9F9B.f03t02)
 ###### _NB: This will only work on Whisperwind (Dept of Medical Genetics) and will require major revisions on other machines_
 
