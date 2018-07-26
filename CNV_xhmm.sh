@@ -509,6 +509,7 @@ if [[ ${call} = "FALSE"  ]]; then
 	--nBins 200 \
 	--includeRefNSites \
 	--countType COUNT_FRAGMENTS \
+	--allow_potentially_misencoded_quality_scores \
 	-o bam_chunkOUT1 > /dev/null 2>&1 &
 	
 	java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk2.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
@@ -522,6 +523,7 @@ if [[ ${call} = "FALSE"  ]]; then
 	--nBins 200 \
 	--includeRefNSites \
 	--countType COUNT_FRAGMENTS \
+	--allow_potentially_misencoded_quality_scores \
 	-o bam_chunkOUT2 > /dev/null 2>&1 &
 	
 	java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk3.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
@@ -535,6 +537,7 @@ if [[ ${call} = "FALSE"  ]]; then
 	--nBins 200 \
 	--includeRefNSites \
 	--countType COUNT_FRAGMENTS \
+	--allow_potentially_misencoded_quality_scores \
 	-o bam_chunkOUT3 &
 	
 	java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk4.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
@@ -548,6 +551,7 @@ if [[ ${call} = "FALSE"  ]]; then
 	--nBins 200 \
 	--includeRefNSites \
 	--countType COUNT_FRAGMENTS \
+	--allow_potentially_misencoded_quality_scores \
 	-o bam_chunkOUT4 > /dev/null 2>&1 &
 	
 	java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk5.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
@@ -561,6 +565,7 @@ if [[ ${call} = "FALSE"  ]]; then
 	--nBins 200 \
 	--includeRefNSites \
 	--countType COUNT_FRAGMENTS \
+	--allow_potentially_misencoded_quality_scores \
 	-o bam_chunkOUT5 > /dev/null 2>&1 &
 	
 	java -Xmx30g -jar ${gatk} -T DepthOfCoverage -I bam_chunk6.list -L ${interval} -R ${ref} -dt BY_SAMPLE -dcov 5000 \
@@ -574,6 +579,7 @@ if [[ ${call} = "FALSE"  ]]; then
 	--nBins 200 \
 	--includeRefNSites \
 	--countType COUNT_FRAGMENTS \
+	--allow_potentially_misencoded_quality_scores \
 	-o bam_chunkOUT6 > /dev/null 2>&1 &
 	
 
