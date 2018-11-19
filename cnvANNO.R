@@ -1,4 +1,4 @@
-##CNV Pipeline - Olive Gold Volt
+##CNV Pipeline - White Iron Photon
 rm(list = ls())
 args = commandArgs(trailingOnly=TRUE)
 require(methods)
@@ -26,21 +26,17 @@ int_af_value <- 0.05
 ref_af_value <- 0.05
 
 #### VARIABLE OPTIONS ####
-
 # ---------------- DO NOT CHANGE BELOW THIS LINE UNLESS YOU KNOW WHAT YOU'RE DOING! ---------------- #
-
 ### set number of decimal places to use - mostly for formatting purposes
 options(digits=3)
 ###Read in files for CNV annotation script
 cnv <- read.table("xhmmCNV.xcnv", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-intv <- read.table("/home/pss41/beds/CNV/hg38/cnv_targets_masked_pad_sort_hg38.bed", sep = "\t", stringsAsFactors = FALSE)
+intv <- read.table(args[1], sep = "\t", stringsAsFactors = FALSE)
 colnames(intv) <- c("chr","start","stop","exon")
 aux <- read.table("xhmmCNV.aux_xcnv", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 #NONREF#
 #ref.list <- read.table("ref_CNVs.txt", sep = "\t", stringsAsFactors = FALSE)
 #colnames(ref.list) <- c("EXON","CNV","AF_ref")
-
-
 
 f.aux <- aux[!aux$TARGET_IND == "U-2" & !aux$TARGET_IND == "U-1" & !aux$TARGET_IND == "D+1" & !aux$TARGET_IND == "D+2",]
 intv$id <- paste(intv$chr,":", intv$start, "-", intv$stop, sep="")
@@ -52,7 +48,6 @@ colnames(x) <- c("CNV_ID","SAMPLE","CHR","TARGET","FULL_INTERVAL","CNV","EXON","
 ###remove unmapped exons from interval files & drop unused factor levels left by merge
 x <- x[!is.na(x$EXON),]
 x <- droplevels.data.frame(x)
-
 
 ###add Q_SOME field from CNV file and number of targets per full interval originally called from CNV file
 q.value <- data.frame(x=rep(0,nrow(x)))
@@ -114,8 +109,6 @@ x <- cbind(x[1:10],AF_all,x[11:ncol(x)])
 #FOR REF# data sets - generate list of exons from CNV at more than percent freq
 #freq.list <- x[,c("EXON","CNV","AF_all")]
 #write.table(freq.list, file = "ref_CNVs.txt", sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
-
-
 
 #NONREF#
 #adding REF_AF

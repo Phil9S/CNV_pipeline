@@ -625,19 +625,19 @@ xhmm --PCA -r xhmmCNV.filtered_centered.RD.txt --PCAfiles xhmmCNV.mergeDepths_PC
 
 if [[ ${PCA_plot} == "TRUE" ]]; then
 	wd=`pwd`
-	Rscript cnvPCA.R ${wd} ${PVE_mean_factor}
+	Rscript cnvPCA.R ${wd} ${PVE_mean_factor} > /dev/null 2>&1
 
 
-vim -c '%s/\(Variance threshold at Principle component: \)\(\S\+\)/\r\1\2/|wq' PCA_summary.txt
-vim -c '%s/ Standard deviation/\rStandard deviation/g|wq' PCA_summary.txt
-vim -c '%s/ Proportion of Variance/\rProportion of Variance/g|wq' PCA_summary.txt
-vim -c '%s/ Cumulative Proportion/\rCumulative Proportion/g|wq' PCA_summary.txt
-vim -c '%s/\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)/\rComponent\t\1\t\2\t\3\t\4\t\5/g|wq' PCA_summary.txt
-vim -c '%s/\(Standard deviation\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6/g|wq' PCA_summary.txt
-vim -c '%s/\(Proportion of Variance\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6/g|wq' PCA_summary.txt
-vim -c '%s/\(Cumulative Proportion\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6/g|wq' PCA_summary.txt
-vim -c '1d|wq' PCA_summary.txt
-vim -c '$m 0|wq' PCA_summary.txt
+#vim -c '%s/\(Variance threshold at Principle component: \)\(\S\+\)/\r\1\2/|wq' PCA_summary.txt
+#vim -c '%s/ Standard deviation/\rStandard deviation/g|wq' PCA_summary.txt
+#vim -c '%s/ Proportion of Variance/\rProportion of Variance/g|wq' PCA_summary.txt
+#vim -c '%s/ Cumulative Proportion/\rCumulative Proportion/g|wq' PCA_summary.txt
+#vim -c '%s/\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)\s\+\(\PC[0-9]\+\)/\rComponent\t\1\t\2\t\3\t\4\t\5/g|wq' PCA_summary.txt
+#vim -c '%s/\(Standard deviation\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6/g|wq' PCA_summary.txt
+#vim -c '%s/\(Proportion of Variance\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6/g|wq' PCA_summary.txt
+#vim -c '%s/\(Cumulative Proportion\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)/\1\t\2\t\3\t\4\t\5\t\6/g|wq' PCA_summary.txt
+#vim -c '1d|wq' PCA_summary.txt
+#vim -c '$m 0|wq' PCA_summary.txt
 else
 	echo -e "## XHMM ANALYSIS ## - PCA_plot_null - Skipping PCA plotting"
 fi
@@ -671,10 +671,11 @@ if (( $(cat xhmmCNV.xcnv | wc -l) < '2' )); then
 fi
 
 mv xhmmCNV.xcnv ../xhmmCNV.xcnv
+mv xhmmCNV.vcf ../xhmmCNV.vcf
 mv bam_list_xhmm ../xhmm_samplelist.txt
 if [[ ${PCA_plot} == "TRUE" ]]; then
-mv PCA_Scree.png ../PCA_Scree.png
-mv PCA_summary.txt ../PCA_summary.txt
+	mv PCA_Scree.png ../PCA_Scree.png
+	mv PCA_summary.txt ../PCA_summary.txt
 fi
 mv xhmmCNV.aux_xcnv ../xhmmCNV.aux_xcnv
 mv cnv.log ../cnv.log
