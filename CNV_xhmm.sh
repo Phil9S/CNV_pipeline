@@ -486,7 +486,7 @@ echo -e ""
 
 ## folder setup
 cp ${int} xhmm.intervals
-vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals > /dev/null 2>&1
+vim -c "%s/\(\S\+\)\t\(\S\+\)\t\(\S\+\)\t\(\S\+\)/\1:\2-\3/g|wq" xhmm.intervals
 interval="xhmm.intervals"
 ls ${inputfolder}*.bam > bam_list_xhmm
 

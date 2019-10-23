@@ -51,15 +51,17 @@ options(scipen=999)
 ## Bar plot of CNV types and counts per Sample called
 
 ## import a summation of the number of DELs or DUPs per sample using dplyr group_by and summarise
-CNV_samp <- as.data.frame(x[14:ncol(x)] %>% group_by(x$CNV) %>% summarise_all(funs(sum(as.numeric(.)))))
+CNV_samp <- as.data.frame(cnv.sam[12:ncol(cnv.sam)] %>% group_by(cnv.sam$CNV) %>% summarise_all(funs(sum(as.numeric(.)))),stringsAsFacors = F)
 ## retain sample names for cbind downstream as names are lost on transpostion step
 SAMPLES <- colnames(CNV_samp[-1])
-CNV_samp <- as.data.frame(t(CNV_samp)[-1,]) ## transpose data frame from x,y to y,x
+CNV_samp <- as.data.frame(t(CNV_samp)[-1,],stringsAsFactors = FALSE) ## transpose data frame from x,y to y,x
 colnames(CNV_samp) <- c("DEL","DUP") ## restore col names
+
+CNV_samp$DEL <- as.numeric(CNV_samp$DEL)
+CNV_samp$DUP <- as.numeric(CNV_samp$DUP)
+
 ## remove factors and add col for sample names back to data.frame
-CNV_samp %>% mutate_if(is.factor, as.numeric) -> CNV_samp
 CNV_samp <- cbind(SAMPLES,CNV_samp)
-## Melt alters the table from wide format to long format - easier for plotting
 CNV_samp <- melt(CNV_samp,id.vars = "SAMPLES")
 ## Addition of an inx field consisting of the sample range for each line - used in facet_grid in the plot to 
 ## make labels for each child plot generated - basically just a series of nested seq.ints and reps
